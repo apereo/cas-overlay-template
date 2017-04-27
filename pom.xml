@@ -76,8 +76,14 @@
             <type>war</type>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jasig.cas</groupId>
+            <artifactId>cas-server-support-ldap</artifactId>
+            <version>${cas.version}</version>
+        </dependency>
     </dependencies>
 
+    
     <properties>
         <cas.version>4.2.7</cas.version>
         <maven-jetty-plugin.version>9.3.6.v20151106</maven-jetty-plugin.version>
