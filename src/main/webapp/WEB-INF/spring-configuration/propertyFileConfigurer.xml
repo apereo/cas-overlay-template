@@ -34,7 +34,6 @@
 		can be moved between tiers without modification.
 	</description>
 
-    <util:properties id="casProperties" location="file:/etc/cas/cas.properties" />
     <bean id="propertyPlaceholderConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
             <list>
@@ -42,7 +41,5 @@
             </list>
         </property>
     </bean>
-
-    <context:property-placeholder properties-ref="casProperties" />
 
 </beans>
