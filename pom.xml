@@ -12,8 +12,8 @@
         <plugins>
             <plugin>
                 <groupId>com.rimerosolutions.maven.plugins</groupId>
-          	<artifactId>wrapper-maven-plugin</artifactId>
-          	<version>0.0.4</version>
+                <artifactId>wrapper-maven-plugin</artifactId>
+                <version>0.0.4</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -58,9 +58,9 @@
                         <contextPath>/cas</contextPath>
                         <overrideDescriptor>${basedir}/etc/jetty/web.xml</overrideDescriptor>
                     </webApp>
-	                <webAppConfig>
-	                    <allowDuplicateFragmentNames>true</allowDuplicateFragmentNames>
-	                </webAppConfig>
+                      <webAppConfig>
+                          <allowDuplicateFragmentNames>true</allowDuplicateFragmentNames>
+                      </webAppConfig>
                     <jvmArgs>-Dlog4j.configurationFile=/etc/cas/log4j2.xml -Xdebug -Xrunjdwp:transport=dt_socket,address=5000,server=y,suspend=n</jvmArgs>
                 </configuration>
             </plugin>
@@ -77,18 +77,32 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
+          <groupId>org.jasig.cas</groupId>
+          <artifactId>cas-server-support-generic</artifactId>
+          <version>${cas.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jasig.cas</groupId>
             <artifactId>cas-server-support-ldap</artifactId>
             <version>${cas.version}</version>
         </dependency>
-	<dependency>
-	  <groupId>org.jasig.cas</groupId>
-	  <artifactId>cas-server-support-generic</artifactId>
-	  <version>${cas.version}</version>
-	</dependency>
+        <dependency>
+          <groupId>org.jasig.cas</groupId>
+          <artifactId>cas-server-support-oauth</artifactId>
+          <version>${cas.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.jasig.cas</groupId>
+          <artifactId>cas-server-support-radius</artifactId>
+          <version>${cas.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.jasig.cas</groupId>
+          <artifactId>cas-server-support-spnego-webflow</artifactId>
+          <version>${cas.version}</version>
+        </dependency>
     </dependencies>
 
-    
     <properties>
         <cas.version>4.2.7</cas.version>
         <maven-jetty-plugin.version>9.3.6.v20151106</maven-jetty-plugin.version>
