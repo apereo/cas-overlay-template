@@ -17,7 +17,7 @@
 # under the License.
 #
 
-server.name=http://CHANGEME_CAS_HOSTNAME:8080
+server.name=http://CHANGEME_CAS_HOSTNAME:CHANGEME_CAS_PORT
 server.prefix=${server.name}/cas
 
 # security configuration based on IP address to access the /status and /statistics pages
@@ -79,10 +79,10 @@ host.name=CHANGEME_CAS_HOSTNAME
 # Do note that the following settings MUST be generated per deployment.
 #
 # The encryption secret key. By default, must be a octet string of size 256.
-# tgc.encryption.key=
+tgc.encryption.key=CHANGEME_CAS_TGCENCRYPTKEY
 
 # The signing secret key. By default, must be a octet string of size 512.
-# tgc.signing.key=
+tgc.signing.key=CHANGEME_CAS_TGCSIGNINGKEY
 
 # Decides whether SSO cookie should be created only under secure connections.
 # tgc.secure=true
@@ -203,10 +203,10 @@ host.name=CHANGEME_CAS_HOSTNAME
 # See the cas-servlet.xml file to understand how these properties are used.
 #
 # The encryption secret key. By default, must be a octet string of size 256.
-# webflow.encryption.key=
+webflow.encryption.key=CHANGEME_CAS_WEBENCRYPTKEY
 
 # The signing secret key. By default, must be a octet string of size 512.
-# webflow.signing.key=
+webflow.signing.key=CHANGEME_CAS_WEBSIGNINGKEY
 
 ##
 # Remote User Authentication
@@ -256,7 +256,14 @@ host.name=CHANGEME_CAS_HOSTNAME
 # File Authentication
 #
 # file.authn.filename=classpath:people.txt
+file.authn.filename=classpath:CHANGEME_CAS_FILECONFDIR/people.txt
 # file.authn.separator=::
+file.authn.separator=::
+cas.authn.file.filename=classpath:CHANGEME_CAS_FILECONFDIR/people.txt
+cas.authn.file.separator=::
+#cas.authn.file.passwordEncoder.type=NONE|DEFAULT|STANDARD|BCRYPT
+cas.authn.file.passwordEncoder.type=NONE
+
 
 ##
 # General Authentication
@@ -719,6 +726,9 @@ ldap.url=ldap://CHANGEME_CAS_LDAPURL:389
 
 # Start TLS for SSL connections
 ldap.useStartTLS=true
+
+ldap.use.ssl=false
+ldap.subtree.search=true
 
 # Directory root DN
 #ldap.rootDn=DC=samdom,DC=example,DC=com
