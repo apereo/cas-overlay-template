@@ -17,5 +17,5 @@
     http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
     http://www.ldaptive.org/schema/spring-ext http://www.ldaptive.org/schema/spring-ext.xsd">
 
-    <import resource="classpath:deployerConfigContext.xml"/>
+    <import resource="${CASCONFDIR}/externalDeployerConfigContext.xml"/>
 </beans>
