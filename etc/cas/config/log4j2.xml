@@ -2,11 +2,11 @@
 <!-- Specify the refresh internal in seconds. -->
 <Configuration monitorInterval="5" packages="org.apereo.cas.logging">
     <Properties>
-        <!-- 
+        <!--
         Default log directory is the current directory but that can be overridden with -Dcas.log.dir=<logdir>
         Or you can change this property to a new default
         -->
-        <Property name="cas.log.dir" >.</Property>
+        <Property name="cas.log.dir" >/etc/cas/logs</Property>
         <!-- To see more CAS specific logging, adjust this property to info or debug or run server with -Dcas.log.leve=debug -->
         <Property name="cas.log.level" >warn</Property>
     </Properties>
@@ -107,8 +107,8 @@
         <!-- All Loggers inherit appenders specified here, unless additivity="false" on the Logger -->
         <AsyncRoot level="warn">
             <AppenderRef ref="casFile"/>
-            <!-- 
-                 For deployment to an application server running as service, 
+            <!--
+                 For deployment to an application server running as service,
                  delete the casConsole appender below
             -->
             <AppenderRef ref="casConsole"/>
