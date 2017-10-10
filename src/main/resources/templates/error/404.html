@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+
+<head>
+  <title>Error Page Not Found</title>
+  <style>
+    <link rel="stylesheet" th:href="@{#{webjars.fontawesome.css}}" />
+    .prompt {
+      font-family: Verdana, sans-serif;
+    }
+  </style>
+</head>
+
+<body id="cas">
+<div layout:fragment="content">
+
+
+  <div class="row">
+    <div class="col-md-6 col-md-offset-3">
+      <div class="panel panel-default cto-panel">
+        <div class="panel-heading"> <h4 class="text-danger"><strong><i class="fa fa-exclamation-circle"></i> Page Not Found</strong></h4></div>
+        <div class="panel-body">
+          <p>
+            The page that you were trying to access was not found.
+          </p>
+          <!--<p>-->
+            <!--<code>{{ baseUrl }}{{ nameRouter.router.url }}</code>-->
+          <!--</p>-->
+          <hr>
+          <ul>
+            <li>If you accessed the page using a bookmark, or a copied link, please check the link and try again</li>
+          </ul>
+          <p>
+            Please feel free to contact Clinical Trials Ontario for more information about this issue.
+          </p>
+        </div>
+        <div class="panel-footer">
+          <p>
+            <a th:href="@{/login}">Go to the login form <i class="fa fa-caret-right" aria-hidden="true"></i></a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+</div>
+</body>
+</html>

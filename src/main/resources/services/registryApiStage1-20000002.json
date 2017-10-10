@@ -1,0 +1,10 @@
+{
+    "@class" : "org.apereo.cas.support.saml.services.SamlRegisteredService",
+    "serviceId" : "registry-api-stage1",
+    "name" : "registryApiStage1",
+    "id" : 20000002,
+    "evaluationOrder" : 10,
+    "metadataLocation": "https://registry-stage1.ctodev.com/api/v1/sso/metadata.xml",
+    "encryptAssertions" : true,
+    "signAssertions" : true
+}

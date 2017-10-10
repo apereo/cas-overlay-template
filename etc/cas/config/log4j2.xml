@@ -6,9 +6,9 @@
         Default log directory is the current directory but that can be overridden with -Dcas.log.dir=<logdir>
         Or you can change this property to a new default
         -->
-        <Property name="cas.log.dir" >.</Property>
+        <Property name="cas.log.dir" >/var/cto/registry/registry-cas-sso/logs</Property>
         <!-- To see more CAS specific logging, adjust this property to info or debug or run server with -Dcas.log.leve=debug -->
-        <Property name="cas.log.level" >warn</Property>
+        <Property name="cas.log.level" >debug</Property>
     </Properties>
     <Appenders>
         <Console name="console" target="SYSTEM_OUT">

@@ -1,0 +1,117 @@
+<div class="box well form-vertical" id="login">
+  <div class="login-header">
+    <h2 th:text="#{cas.login.texttitle}"></h2>
+    <span class="fa-stack fa-2x hidden-xs">
+          <i class="fa fa-circle fa-stack-2x"></i>
+          <i class="fa fa-lock fa-stack-1x fa-inverse"></i>
+        </span>
+  </div>
+
+  <form method="post" class="" id="fm1" th:object="${credential}">
+
+    <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
+      <span th:each="err : ${#fields.errors('*')}" th:utext=" ${err}"/>
+    </div>
+
+    <section class="form-group cto-form-group form-group-lg">
+      <label for="username" class="control-label" th:utext="#{screen.welcome.label.netid}"/>
+
+      <div th:if="${openIdLocalId}">
+        <strong>
+          <span th:utext="${openIdLocalId}"/>
+        </strong>
+        <input type="hidden"
+               id="username"
+               name="username"
+               th:value="${openIdLocalId}"/>
+      </div>
+      <div th:unless="${openIdLocalId}">
+        <input class="required form-control cto-input input-lg"
+               id="username"
+               size="25"
+               tabindex="1"
+               type="text"
+               th:placeholder="#{cas.custom.login.username.ph}"
+               th:field="*{username}"
+               th:accesskey="#{screen.welcome.label.netid.accesskey}"
+               autocomplete="off"/>
+      </div>
+    </section>
+
+    <section class="form-group cto-form-group form-group-lg">
+      <label for="password" class="control-label" th:utext="#{screen.welcome.label.password}"/>
+
+      <div>
+        <input class="required form-control cto-input input-lg"
+               type="password"
+               id="password"
+               size="25"
+               tabindex="2"
+               th:placeholder="#{cas.custom.login.password.ph}"
+               th:accesskey="#{screen.welcome.label.password.accesskey}"
+               th:field="*{password}"
+               autocomplete="off"/>
+        <span id="capslock-on" style="display:none;">
+            <p class="text-danger">
+                <i class="fa fa-exclamation-circle"></i>
+                <span th:utext="#{screen.capslock.on}"/>
+            </p>
+        </span>
+      </div>
+    </section>
+    <section class="row check">
+      <p th:if="${rememberMeAuthenticationEnabled}">
+        <input type="checkbox" name="rememberMe" id="rememberMe" value="true" tabindex="5"  />
+        <label for="rememberMe" th:text="#{screen.rememberme.checkbox.title}"/>
+      </p>
+    </section>
+
+    <section class="row" th:if="${recaptchaSiteKey}">
+      <div class="g-recaptcha" th:attr="data-sitekey=${recaptchaSiteKey}"/>
+    </section>
+
+    <br/>
+
+    <section class="btn-row text-center">
+      <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+      <input type="hidden" name="_eventId" value="submit"/>
+      <input type="hidden" name="geolocation"/>
+
+      <button class="btn btn-primary btn-lg btn-block"
+             name="submit"
+             accesskey="l"
+             th:value="#{screen.welcome.button.login}"
+             tabindex="6"
+             type="submit">
+        <span th:text="#{screen.welcome.button.login}"></span>
+        <i class="fa fa-sign-in"></i>
+      </button>
+    </section>
+
+    <br/>
+  </form>
+
+  <form th:if="${passwordManagementEnabled}" method="post">
+    <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+    <input type="hidden" name="_eventId" value="resetPassword"/>
+    <span class="fa fa-unlock cto-help-icon"></span>
+    <a th:utext="#{screen.pm.button.resetPassword}" href="javascript:void(0)" onclick="$('#misagh').submit();" />
+    <p/>
+  </form>
+
+  <div th:unless="${passwordManagementEnabled}">
+    <span class="fa fa-question-circle cto-help-icon"></span>
+    <a th:href="@{#{cas.custom.registry.baseUrl} + #{cas.custom.resetPassword.uri}}" th:utext="#{cas.custom.resetPassword.text}" ></a>
+    <p/>
+  </div>
+
+  <script type="text/javascript" th:inline="javascript">
+      var i = [[#{screen.welcome.button.loginwip}]]
+      $("#fm1").submit(function() {
+          $(":submit").attr("disabled", true);
+          $(":submit").attr("value", i);
+          return true;
+      });
+  </script>
+  <div th:replace="fragments/loginsidebar"/>
+</div>

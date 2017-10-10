@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+
+<head>
+  <title>System Error</title>
+  <style>
+    <link rel="stylesheet" th:href="@{#{webjars.fontawesome.css}}" />
+    .prompt {
+      font-family: Verdana, sans-serif;
+    }
+  </style>
+</head>
+
+<body id="cas">
+<div layout:fragment="content">
+
+
+  <div class="row">
+    <div class="col-md-6 col-md-offset-3">
+      <div class="panel panel-default cto-panel">
+        <div class="panel-heading"> <h4 class="text-danger"><strong><i aria-hidden="true" class="fa fa-exclamation-circle"></i> An Error Occurred</strong></h4></div>
+        <div class="panel-body">
+          <p>
+            The system encountered an error while trying to process your request
+          </p>
+          <hr>
+          <ul>
+            <li>If this is the first time you have received this message, please press the back button and try your request again.</li>
+          </ul>
+          <p>
+            Please feel free to contact Clinical Trials Ontario for more information about this issue.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

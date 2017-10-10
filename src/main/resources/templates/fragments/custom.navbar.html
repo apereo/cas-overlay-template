@@ -1,0 +1,38 @@
+<nav class="navbar navbar-inverse  navbar-fixed-top" id="cto-navbar" role="navigation">
+  <div class="container">
+
+    <div class="navbar-header">
+      <button aria-expanded="false" class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#cto-navbar-content">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" ng-reflect-router-link="" th:href="@{#{cas.custom.registry.baseUrl}}">
+        <span class="navbar-brand-text">CTO Registry</span>
+      </a>
+    </div>
+
+
+    <div class="navbar-collapse collapse" id="cto-navbar-content">
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+          <a role="button"  th:href="@{#{cas.custom.registry.baseUrl} + #{cas.custom.register.uri}}">
+            <span class="menu-item-icon">
+              <i aria-hidden="true" class="fa fa-user-circle"></i>
+            </span>
+            <span class="menu-item-text" th:text="#{cas.custom.register.text}"></span>
+          </a>
+        </li>
+        <li class="active">
+          <a role="button" tabindex="0"  th:href="@{/login}">
+            <span class="menu-item-icon">
+              <i aria-hidden="true" class="fa fa-sign-in"></i>
+            </span>
+            <span class="menu-item-text" th:text="#{cas.custom.login.text}"></span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,10 @@
+{
+    "@class" : "org.apereo.cas.support.saml.services.SamlRegisteredService",
+    "serviceId" : "registry-api-local",
+    "name" : "registryApiDEV",
+    "id" : 20000001,
+    "evaluationOrder" : 10,
+    "metadataLocation": "https://cto.local:9000/api/v1/sso/metadata.xml",
+    "encryptAssertions" : true,
+    "signAssertions" : true
+}
