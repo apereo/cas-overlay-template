@@ -183,7 +183,7 @@ task createKeystore (group: "build", description: "Create CAS keystore") {
         def keystorePathRoot = "‎${project.rootDir}/etc/cas"
         def keystorePath = "${keystorePathRoot}/thekeystore"
 
-        def dn = "CN=cas.dev.api.local,OU=Fuego,OU=Org,C=US"
+        def dn = "CN=cas.dev.api.local,OU=Fuego,OU=local,C=US"
         if (project.hasProperty("certificateDn")) {
             dn = project.getProperty("certificateDn")
         }
