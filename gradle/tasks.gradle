@@ -179,9 +179,8 @@ task casVersion (group: "build", description: "Display the current CAS version")
 task createKeystore (group: "build", description: "Create CAS keystore") {
     doFirst {
 //        mkdir "/etc/cas"
-        println(" Out Var ${project.rootDir}")
-        mkdir "‎/Users/deya/dev/projects/fuego/i-register/events-management-parent/events-management-core/core-security/security-cas-service/src/cas-overlays/cas-overlay-template/etc/cas"
-        def keystorePathRoot = "/Users/deya/dev/projects/fuego/i-register/events-management-parent/events-management-core/core-security/security-cas-service/src/cas-overlays/cas-overlay-template/etc/cas"
+        mkdir "‎${project.rootDir}/etc/cas"
+        def keystorePathRoot = "‎${project.rootDir}/etc/cas"
         def keystorePath = "${keystorePathRoot}/thekeystore"
 
         def dn = "CN=cas.dev.api.local,OU=Fuego,OU=Org,C=US"
