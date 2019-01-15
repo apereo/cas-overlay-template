@@ -197,7 +197,7 @@ task createKeystore (group: "build", description: "Create CAS keystore") {
             workingDir "."
             commandLine "keytool", "-genkeypair", "-alias", "cas-server",
                     "-keyalg", "RSA",
-                    "-keypass", "Xain1234", "-storepass", "Xain1234",
+                    "-keypass", "changeit", "-storepass", "changeit",
                     "-keystore", keystorePath,
                     "-dname", dn, "-ext", "SAN=${subjectAltName}"
         }
@@ -205,7 +205,7 @@ task createKeystore (group: "build", description: "Create CAS keystore") {
         exec {
             workingDir "."
             commandLine "keytool", "-exportcert", "-alias", "cas-server",
-                    "-storepass", "Xain1234", "-keystore", keystorePath,
+                    "-storepass", "changeit", "-keystore", keystorePath,
                     "-file", "${keystorePathRoot}/cas.cer"
         }
         logger.info "Import ${keystorePathRoot}/cas.cer into your Java truststore (JAVA_HOME/lib/security/cacerts)"
