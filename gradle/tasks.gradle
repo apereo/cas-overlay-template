@@ -195,17 +195,17 @@ task createKeystore (group: "build", description: "Create CAS keystore") {
         logger.info "Generating keystore for CAS with DN ${dn}"
         exec {
             workingDir "."
-            commandLine "keytool", "-genkeypair", "-alias", "cas",
+            commandLine "keytool", "-genkeypair", "-alias", "cas-server",
                     "-keyalg", "RSA",
-                    "-keypass", "changeit", "-storepass", "changeit",
+                    "-keypass", "Xain1234", "-storepass", "Xain1234",
                     "-keystore", keystorePath,
                     "-dname", dn, "-ext", "SAN=${subjectAltName}"
         }
         logger.info "Exporting cert from keystore..."
         exec {
             workingDir "."
-            commandLine "keytool", "-exportcert", "-alias", "cas",
-                    "-storepass", "changeit", "-keystore", keystorePath,
+            commandLine "keytool", "-exportcert", "-alias", "cas-server",
+                    "-storepass", "Xain1234", "-keystore", keystorePath,
                     "-file", "${keystorePathRoot}/cas.cer"
         }
         logger.info "Import ${keystorePathRoot}/cas.cer into your Java truststore (JAVA_HOME/lib/security/cacerts)"
