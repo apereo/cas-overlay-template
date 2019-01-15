@@ -179,8 +179,8 @@ task casVersion (group: "build", description: "Display the current CAS version")
 task createKeystore (group: "build", description: "Create CAS keystore") {
     doFirst {
 //        mkdir "/etc/cas"
-        mkdir "‎${project.rootDir}/etc/cas"
-        def keystorePathRoot = "‎${project.rootDir}/etc/cas"
+        mkdir "‎/etc/cas"
+        def keystorePathRoot = "‎/etc/cas"
         def keystorePath = "${keystorePathRoot}/thekeystore"
 
         def dn = "CN=cas.dev.api.local,OU=Fuego,OU=local,C=US"
@@ -195,7 +195,7 @@ task createKeystore (group: "build", description: "Create CAS keystore") {
         logger.info "Generating keystore for CAS with DN ${dn}"
         exec {
             workingDir "."
-            commandLine "keytool", "-genkeypair", "-alias", "cas-server",
+            commandLine "keytool", "-genkeypair", "-alias", "cas-server-v1",
                     "-keyalg", "RSA",
                     "-keypass", "changeit", "-storepass", "changeit",
                     "-keystore", keystorePath,
@@ -204,7 +204,7 @@ task createKeystore (group: "build", description: "Create CAS keystore") {
         logger.info "Exporting cert from keystore..."
         exec {
             workingDir "."
-            commandLine "keytool", "-exportcert", "-alias", "cas-server",
+            commandLine "keytool", "-exportcert", "-alias", "cas-server-v1",
                     "-storepass", "changeit", "-keystore", keystorePath,
                     "-file", "${keystorePathRoot}/cas.cer"
         }
