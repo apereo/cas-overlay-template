@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{iesabroad/layout}">
+
+<head>
+  <title th:text="#{cas.login.pagetitle}"></title>
+</head>
+
+<body id="cas" class="login">
+  <div layout:fragment="content">
+    <div class="row">
+      <div class="col-sm-12 col-md-4 col-md-offset-4">
+        <div th:replace="iesabroad/fragments/loginform"/>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
