@@ -14,12 +14,12 @@
     <div class="headerWrapper">
         <div class="header">
             <div class="headerLeft" >
-                <div style="float:left;" th:if="${registeredServiece}">
+                <div style="float:left;" th:if="${registeredService}">
                     <img th:src="${registeredService.logo}" th:if="${registeredService.logo}" border="0"/>
                     <img th:src="@{${#themes.code('cas.logo.file')}}" th:unless="${registeredService.logo}" border="0"/>
                 </div>
-                <div style="float:left;" th:unless="${registeredServiece}">
-                    <img th:src="@{${#themes.code('cas.logo.file')}}" th:unless="${registeredService.logo}" border="0"/>
+                <div style="float:left;" th:unless="${registeredService}">
+                    <img th:src="@{${#themes.code('cas.logo.file')}}" border="0"/>
                 </div>
                 <div class="appTitle">
                     [Authentication]
