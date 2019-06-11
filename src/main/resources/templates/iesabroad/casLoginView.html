@@ -2,16 +2,33 @@
 <html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{iesabroad/layout}">
 
 <head>
-  <title th:text="#{cas.login.pagetitle}"></title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+
+    <title th:text="#{cas.login.pagetitle}">CAS Acceptable Use Policy View</title>
+    <link href="../../static/iesabroad/css/cas.css" rel="stylesheet" th:remove="tag" />
+
 </head>
 
-<body id="cas" class="login">
-  <div layout:fragment="content">
-    <div class="row">
-      <div class="col-sm-12 col-md-4 col-md-offset-4">
-        <div th:replace="iesabroad/fragments/loginform"/>
-      </div>
+<body class="login">
+
+<main role="main" class="container mt-3 mb-3">
+    <div layout:fragment="content" class="row" >
+        <div class="col-md">
+            <div th:replace="iesabroad/fragments/serviceui :: serviceUI"><a href="fragments/serviceui.html">service ui</a> fragment</div>
+            <div th:replace="iesabroad/fragments/loginform :: loginform"><a href="fragments/loginform.html">Login Form goes
+                here</a></div>
+        </div>
+        <div id="notices" class="col-md mt-3 mt-md-0">
+            <div th:replace="iesabroad/fragments/defaultauthn :: staticAuthentication">
+                <a href="fragments/defaultauthn.html">defaultAuthn</a>
+                fragment
+            </div>
+            <div th:replace="iesabroad/fragments/cookies :: cookiesDisabled"><a href="fragments/cookies.html">cookies</a> fragment
+            </div>
+        </div>
     </div>
-  </div>
+</main>
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 

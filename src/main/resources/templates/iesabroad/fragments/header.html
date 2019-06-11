@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+
+    <title>Header Fragment</title>
+    <link href="../../static/css/cas.css" rel="stylesheet" th:remove="tag" />
+</head>
+<body>
+<header th:fragment="header" role="banner">
+
+    <div class="headerWrapper">
+        <div class="header">
+            <div class="headerLeft" >
+                <div style="float:left;" th:if="${registeredServiece}">
+                    <img th:src="${registeredService.logo}" th:if="${registeredService.logo}" border="0"/>
+                    <img th:src="@{${#themes.code('cas.logo.file')}}" th:unless="${registeredService.logo}" border="0"/>
+                </div>
+                <div style="float:left;" th:unless="${registeredServiece}">
+                    <img th:src="@{${#themes.code('cas.logo.file')}}" th:unless="${registeredService.logo}" border="0"/>
+                </div>
+                <div class="appTitle">
+                    [Authentication]
+                </div>
+            </div>
+            <div style="clear:both;"></div>
+        </div>
+    </div>
+    <div class="menuWrapper">
+        <div style="clear:both;"></div>
+    </div>
+</header>
+</body>
+</html>

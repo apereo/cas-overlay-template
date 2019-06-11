@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+
+    <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE">IES</title>
+
+    <link rel="stylesheet" th:href="@{#{webjars.fontawesomemin.css}}"/>
+    <link type="text/css" rel="stylesheet" th:href="@{#{webjars.latomin.css}}"/>
+
+    <!--/* Core CAS CSS */-->
+    <link rel="stylesheet" href="../static/css/cas.css" th:href="@{${#themes.code('cas.standard.css.file')}}"/>
+
+    <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
+
+    <script type="text/javascript" th:src="@{#{webjars.jquerymin.js}}"></script>
+
+</head>
+
+<body>
+<div th:replace="iesabroad/fragments/header :: header">
+    <a href="fragments/header.html">Header</a> fragment will go here
+</div>
+
+<main role="main" class="container mt-3 mb-3">
+    <div layout:fragment="content" id="content">
+        CAS content will go here
+    </div>
+</main>
+
+<div th:replace="iesabroad/fragments/footer :: footer">
+    <a href="fragments/footer.html">Footer</a> fragment will go here
+</div>
+
+<script th:replace="fragments/scripts"/>
+</body>
+</html>

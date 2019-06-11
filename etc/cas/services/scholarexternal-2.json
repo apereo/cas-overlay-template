@@ -1,0 +1,21 @@
+{
+  "@class" : "org.apereo.cas.services.RegexRegisteredService",
+  "serviceId" : "https://scholar2.iesabroad.org/scholar_external/.*",
+  "name" : "Scholar External",
+  "description": "Student Information"
+  "id" : 2,
+  "evaluationOrder" : 2,
+  "theme" : "iesabroad",
+  "attributeReleasePolicy" : {
+	"@class" : "org.jasig.cas.services.ReturnAllAttributeReleasePolicy"
+  },
+  "accessStrategy" : {
+    "@class" : "org.apereo.cas.services.DefaultRegisteredServiceAccessStrategy",
+    "requiredAttributes" : {
+      "@class" : "java.util.HashMap",
+      "personRole" : [ "java.util.HashSet", [ "scholar_external/" ] ]
+    }
+  },
+  "logoutType" : "BACK_CHANNEL",
+  "logoutUrl" : "https://scholar2.iesabroad.org/scholar_external/logout.jspx"
+}

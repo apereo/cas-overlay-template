@@ -14,6 +14,7 @@
         <div class="col-md">
             <!-- Login form template begins here -->
             <div th:fragment="loginform" class="card">
+                <!--
                 <div class="card-header text-center">
                     <h2 th:text="#{cas.login.pagetitle}">Login</h2>
                     <span class="fa-stack fa-2x hidden-xs">
@@ -21,13 +22,14 @@
                       <i class="fa fa-lock fa-stack-1x fa-inverse"></i>
                     </span>
                 </div>
+                -->
                 <div class="card-body">
                     <form method="post" id="fm1" th:object="${credential}" action="login">
                         <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
                             <span th:each="err : ${#fields.errors('*')}" th:utext="${err}">Example error</span>
                         </div>
 
-                        <h3 th:utext="#{screen.welcome.instructions}">Enter your Username and Password</h3>
+<!--                        <h3 th:utext="#{screen.welcome.instructions}">Enter your Username and Password</h3> -->
 
                         <section class="form-group">
                             <label for="username" th:utext="#{screen.welcome.label.netid}">Username</label>
@@ -52,6 +54,13 @@
                                        th:accesskey="#{screen.welcome.label.netid.accesskey}"
                                        autocomplete="off"/>
                             </div>
+                            <div>
+                                <a
+                                        th:href="@{${#themes.code('cas.help.file')}}"
+                                        href="javascript:window.open('/cas/help.html','','scrollbars=no,menubar=no,height=600,width=800,resizable=yes,toolbar=no,location=no,status=no');">
+                                    <div th:utext="Help">Help</div>
+                                </a>
+                            </div>
                         </section>
 
                         <section class="form-group">
@@ -75,7 +84,7 @@
                             </div>
                         </section>
 
-                        <section class="form-check" th:if="${passwordManagementEnabled && param.doChangePassword != null}">
+                        <section class="form-check" th:if="${passwordManagementEnabled}">
                             <p>
                                 <input type="checkbox" name="doChangePassword" id="doChangePassword"
                                        value="true" th:checked="${param.doChangePassword != null}" tabindex="4"/>
@@ -97,7 +106,14 @@
                         <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                         <input type="hidden" name="_eventId" value="submit"/>
                         <input type="hidden" name="geolocation"/>
-                        <input class="btn btn-block btn-submit"
+                        <p th:if="${#request.getMethod().equalsIgnoreCase('POST')}">
+                          <span th:each="entry : ${httpRequestInitialPostParameters}" th:remove="tag">
+                              <span th:each="entryValue : ${entry.value}" th:remove="tag">
+                                  <input type="hidden" th:name="${entry.key}" th:value="${entryValue}" />
+                              </span>
+                          </span>
+                        </p>
+                        <input class="standardButton"
                                th:unless="${recaptchaSiteKey != null AND recaptchaInvisible != null AND recaptchaSiteKey != null AND recaptchaInvisible}"
                                name="submit"
                                accesskey="l"
@@ -143,7 +159,7 @@
                         });
                     </script>
 
-                    <div th:replace="fragments/loginsidebar :: loginsidebar" />
+<!--/*                    <div th:replace="fragments/loginsidebar :: loginsidebar" /> */-->
                 </div>
             </div>
         </div>
