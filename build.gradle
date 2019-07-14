@@ -4,6 +4,7 @@ buildscript {
         mavenCentral()
         jcenter()
         maven { url "https://repo.spring.io/libs-milestone" }
+        maven { url "https://repo.spring.io/libs-snapshot/" }
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
@@ -20,6 +21,7 @@ repositories {
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
     maven { url "https://build.shibboleth.net/nexus/content/repositories/releases/" }
     maven { url "https://repo.spring.io/milestone/" }
+    maven { url "https://repo.spring.io/snapshot/" }
     maven { url "https://oss.jfrog.org/artifactory/oss-snapshot-local" }
 }
 
