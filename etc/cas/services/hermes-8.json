@@ -1,10 +1,10 @@
 {
   "@class" : "org.apereo.cas.services.RegexRegisteredService",
-  "serviceId" : "https://scholar2.iesabroad.org/caerus.*",
-  "name" : "Caerus",
-  "description" : "Quote Generation for customized programs",
-  "id" : 1,
-  "evaluationOrder" : 1,
+  "serviceId" : "https://scholar2.iesabroad.org/hermes.*",
+  "name" : "Hermes",
+  "description" : "Reporting Tool",
+  "id" : 8,
+  "evaluationOrder" : 8,
   "theme" : "iesabroad",
   "attributeReleasePolicy" : {
 	"@class" : "org.jasig.cas.services.ReturnAllAttributeReleasePolicy"
@@ -13,9 +13,9 @@
     "@class" : "org.apereo.cas.services.DefaultRegisteredServiceAccessStrategy",
     "requiredAttributes" : {
       "@class" : "java.util.HashMap",
-      "personRole" : [ "java.util.HashSet", [ "Caerus" ] ]
+      "personRole" : [ "java.util.HashSet", [ "Hermes" ] ]
     }
   },
   "logoutType" : "BACK_CHANNEL",
-  "logoutUrl" : "https://scholar2.iesabroad.org/caerus/logout.jspx"
+  "logoutUrl" : "https://scholar2.iesabroad.org/hermes/logout.jspx"
 }
