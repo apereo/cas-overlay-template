@@ -61,7 +61,7 @@ function preserveAnchorTagOnForm() {
         var location = self.document.location;
         var hash = decodeURIComponent(location.hash);
 
-        if (hash != undefined && hash != '' && hash.indexOf('#') === -1) {
+        if (hash !== undefined && hash !== '' && hash.indexOf('#') === -1) {
             hash = '#' + hash;
         }
 
@@ -70,7 +70,7 @@ function preserveAnchorTagOnForm() {
             action = location.href;
         } else {
             var qidx = location.href.indexOf('?');
-            if (qidx != -1) {
+            if (qidx !== -1) {
                 var queryParams = location.href.substring(qidx);
                 action += queryParams;
             }
@@ -89,7 +89,7 @@ function areCookiesEnabled() {
     $.cookie('cookiesEnabled', 'true');
     var value = $.cookie('cookiesEnabled');
     $.removeCookie('cookiesEnabled');
-    return value != undefined;
+    return value !== undefined;
 
 }
 
@@ -116,7 +116,7 @@ function disableEmptyInputFormSubmission() {
     if ($('#fm1 input[name="username"]').length > 0) {
         setTimeout(function () {
             var uid = $('#username').val();
-            if (uid != null && uid != '') {
+            if (uid !== null && uid !== '') {
                 $('#username').change();
                 $('#username').focus();
                 $('#fm1 input[name=submit]').removeAttr('disabled');

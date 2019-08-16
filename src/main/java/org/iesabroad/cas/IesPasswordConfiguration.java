@@ -57,7 +57,6 @@ public class IesPasswordConfiguration extends LdapAuthenticationConfiguration {
     public DataSource dataSource() {
         log.debug("Creating datasource using: " + System.lineSeparator()
             + "datasource.username" + environment.getProperty("spring.datasource.username") + System.lineSeparator()
-            + "datasource.password" + environment.getProperty("spring.datasource.password") + System.lineSeparator()
             + "datasource.url" + environment.getProperty("spring.datasource.url") + System.lineSeparator()
             + "datasource.driver" + environment.getProperty("spring.datasource.driver") + System.lineSeparator()
             + "datasource.username" + environment.getProperty("spring.datasource.username") + System.lineSeparator());
@@ -74,12 +73,11 @@ public class IesPasswordConfiguration extends LdapAuthenticationConfiguration {
     public EntityManagerFactory entityManagerFactory()  {
         log.debug("Creating datasource using: " + System.lineSeparator()
                 + "datasource.username" + environment.getProperty("spring.datasource.username") + System.lineSeparator()
-                + "datasource.password" + environment.getProperty("spring.datasource.password") + System.lineSeparator()
                 + "datasource.url" + environment.getProperty("spring.datasource.url") + System.lineSeparator()
                 + "datasource.driver" + environment.getProperty("spring.datasource.driver") + System.lineSeparator()
                 + "datasource.username" + environment.getProperty("spring.datasource.username") + System.lineSeparator());
         try {
-            Class.forName("net.sourceforge.jtds.jdbc.Driver");
+            Class.forName(environment.getProperty("spring.datasource.url"));
         } catch (ClassNotFoundException e) {
             log.error(e.getMessage(), e);
         }
