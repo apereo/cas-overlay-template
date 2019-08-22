@@ -1,0 +1,12 @@
+{
+  "@class" : "org.apereo.cas.services.RegexRegisteredService",
+  "serviceId" : "https://www.*.iesabroad.org.*"
+  "name" : "IES",
+  "id" : 103935657744187,
+  "evaluationOrder" : 11,
+    "attributeReleasePolicy" : {
+	"@class" : "org.jasig.cas.services.ReturnAllAttributeReleasePolicy"
+  },
+
+//  "theme" : "iesabroad"
+}
