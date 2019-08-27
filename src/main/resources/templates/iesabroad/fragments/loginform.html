@@ -14,7 +14,7 @@
         <div class="col-md">
             <!-- Login form template begins here -->
             <div th:fragment="loginform" class="card">
-                <!--
+                <!--/*
                 <div class="card-header text-center">
                     <h2 th:text="#{cas.login.pagetitle}">Login</h2>
                     <span class="fa-stack fa-2x hidden-xs">
@@ -22,14 +22,12 @@
                       <i class="fa fa-lock fa-stack-1x fa-inverse"></i>
                     </span>
                 </div>
-                -->
+                */-->
                 <div class="card-body">
                     <form method="post" id="fm1" th:object="${credential}" action="login">
                         <div class="alert alert-danger" th:if="${#fields.hasErrors('*')}">
                             <span th:each="err : ${#fields.errors('*')}" th:utext="${err}">Example error</span>
                         </div>
-
-<!--                        <h3 th:utext="#{screen.welcome.instructions}">Enter your Username and Password</h3> -->
 
                         <section class="form-group">
                             <label for="username" th:utext="#{screen.welcome.label.netid}">Username</label>
@@ -54,13 +52,7 @@
                                        th:accesskey="#{screen.welcome.label.netid.accesskey}"
                                        autocomplete="off"/>
                             </div>
-                            <div>
-                                <a
-                                        th:href="@{${#themes.code('cas.help.file')}}"
-                                        href="javascript:window.open('/cas/help.html','','scrollbars=no,menubar=no,height=600,width=800,resizable=yes,toolbar=no,location=no,status=no');">
-                                    <div th:utext="Help">Help</div>
-                                </a>
-                            </div>
+
                         </section>
 
                         <section class="form-group">
@@ -83,7 +75,7 @@
                             </span>
                             </div>
                         </section>
-
+                        <!--/*
                         <section class="form-check" th:if="${passwordManagementEnabled}">
                             <p>
                                 <input type="checkbox" name="doChangePassword" id="doChangePassword"
@@ -91,7 +83,7 @@
                                 <label for="doChangePassword" th:text="#{screen.button.changePassword}">Change Password</label>
                             </p>
                         </section>
-
+                        */-->
                         <section class="form-check" th:if="${rememberMeAuthenticationEnabled}">
                             <p>
                                 <input type="checkbox" name="rememberMe" id="rememberMe" value="true" tabindex="5"/>
@@ -113,15 +105,17 @@
                               </span>
                           </span>
                         </p>
-                        <input class="standardButton"
-                               th:unless="${recaptchaSiteKey != null AND recaptchaInvisible != null AND recaptchaSiteKey != null AND recaptchaInvisible}"
-                               name="submit"
-                               accesskey="l"
-                               th:value="#{screen.welcome.button.login}"
-                               tabindex="6"
-                               type="submit"
-                               value="Login3"
-                        />
+                        <div class="centeredContent mb-3">
+                            <input class="standardButton col-md-6"
+                                   th:unless="${recaptchaSiteKey != null AND recaptchaInvisible != null AND recaptchaSiteKey != null AND recaptchaInvisible}"
+                                   name="submit"
+                                   accesskey="l"
+                                   th:value="#{screen.welcome.button.login}"
+                                   tabindex="6"
+                                   type="submit"
+                                   value="Login3"
+                            />
+                        </div>
                         <button class="btn btn-block btn-submit g-recaptcha"
                                 th:if="${recaptchaSiteKey != null AND recaptchaInvisible != null AND recaptchaSiteKey != null AND recaptchaInvisible}"
                                 th:attr="data-sitekey=${recaptchaSiteKey}, data-badge=${recaptchaPosition}"
@@ -134,11 +128,13 @@
                     </form>
 
                     <form th:if="${passwordManagementEnabled}" method="post" id="passwordManagementForm">
-                        <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
-                        <input type="hidden" name="_eventId" value="resetPassword"/>
-                        <span class="fa fa-unlock"></span>
-                        <a th:utext="#{screen.pm.button.resetPassword}" href="javascript:void(0)" onclick="$('#passwordManagementForm').submit();"/>
-                        <p/>
+                        <div class="centeredContent">
+                            <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
+                            <input type="hidden" name="_eventId" value="resetPassword"/>
+                            <span class="fa fa-unlock"></span>
+                            <a th:utext="#{screen.pm.button.resetPassword}" href="javascript:void(0)" onclick="$('#passwordManagementForm').submit();"/>
+                            <p/>
+                        </div>
                     </form>
 
                     <div th:unless="${passwordManagementEnabled}">
