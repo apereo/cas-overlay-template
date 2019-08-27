@@ -12,8 +12,13 @@
 
 <body>
 <main role="main" class="container mt-3 mb-3">
-    <div layout:fragment="content">
-        <div th:replace="fragments/pwdupdateform"><a href="fragments/pwdupdateform.html">pwdupdateform</a></div>
+    <div layout:fragment="content" class="row">
+        <div class="ies-form-header col-md-6 offset-3">
+            <img class="logo" th:src="@{${#themes.code('cas.logo.file')}}" alt="IES logo"/>
+        </div>
+        <div class="ies-form col-md-6 offset-3">
+            <div th:replace="iesabroad/fragments/pwdupdateform"><a href="iesabroad/fragments/pwdupdateform.html">pwdupdateform</a></div>
+        </div>
     </div>
 </main>
 </body>
