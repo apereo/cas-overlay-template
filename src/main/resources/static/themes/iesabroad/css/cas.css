@@ -57,13 +57,13 @@ article, aside, dialog, figcaption, figure, footer, header, hgroup, main, nav, s
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  font-size: 1rem;
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.5;
   color: #212529;
   text-align: left;
-  background-color: #343a40; }
+  background-color: #ccc; }
 
 [tabindex="-1"]:focus {
   outline: 0 !important; }
@@ -3685,7 +3685,7 @@ tbody.collapse.show {
   justify-content: center;
   color: #fff;
   text-align: center;
-  background-color: #007bff;
+  background-color: #008cad;
   transition: width 0.6s ease; }
 
 .progress-bar-striped {
@@ -7933,19 +7933,13 @@ DIV.appTitle {
 /*
 	HTML Default styles
 */
-BODY {
-  background-color: #EBEAE2;
-  font-family: Verdana, Arial, Helvetica, sans-serif;
-  font-size: 10pt;
-}
 
-
-A {
-  color: #37568C;
+a {
+  color: #008CAD;
   text-decoration: none;
 }
 
-A:hover {
+a:hover {
   text-decoration: underline;
 }
 
@@ -7988,13 +7982,18 @@ IMG {
   border: 0px solid #37568C;
 }
 
-INPUT.standardButton {
+input.standardButton {
   font-family: Verdana, Arial, Helvetica, sans-serif;
-  font-size: 10pt;
-  background-color: #6A89BF;
-  color: #ffffff;
-  border: 2px solid #777777;
+  font-size: 18.66px;
+  background-color: #008CAD;
+  color: #fff;
+  border: 2px solid #008CAD;
   cursor: default;
+}
+
+input.standardButton:hover {
+    color: #008cad;
+    background-color: #fff;
 }
 
 .popupBorder {
@@ -8063,4 +8062,24 @@ DIV.main {
 .dropNewPasswords {
   visibility:hidden;
 }
+
+.ies-form {
+    background-color: #fff;
+}
+
+.ies-form-header {
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #ccc;
+}
+
+.ies-form-header .logo {
+    height: 100px;
+    margin: 10px;
+}
+
+input.standardButton {
+    height: 45px;
+    font-weight: bolder;
+}
+
 /*# sourceMappingURL=cas.css.map */

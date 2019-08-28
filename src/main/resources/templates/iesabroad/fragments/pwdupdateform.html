@@ -7,7 +7,10 @@
 
     <title>Password Update Form</title>
     <link href="../../static/css/cas.css" rel="stylesheet" th:remove="tag" />
-
+<script>
+    <!--/* Init progressMeter.js */-->
+    $(document).ready( jqueryReady );
+</script>
     <script th:inline="javascript">
       /*<![CDATA[*/
 
@@ -25,7 +28,7 @@
 </head>
 <body>
 <main role="main" class="container mt-3 mb-3">
-    <div class="alert alert-info">
+    <div class="alert">
         <h3 th:utext="${expiredPass} ? #{screen.expiredpass.heading} : #{screen.mustchangepass.heading}">Change Password
             Heading</h3>
         <form id="passwordManagementForm" th:if="${passwordManagementEnabled}" method="post" th:object="${password}">
@@ -70,7 +73,7 @@
             <div class="form-group text-center">
                 <input type="hidden" name="execution" th:value="${flowExecutionKey}"/>
                 <input type="hidden" name="_eventId" value="submit"/>
-                <input class="btn btn-submit"
+                <input class="standardButton col-md-4"
                        name="submit"
                        accesskey="s"
                        th:value="#{screen.pm.button.submit}"
@@ -79,7 +82,12 @@
                        type="submit"
                        disabled="true"/>
                 &nbsp;
-                <a class="btn btn-danger" th:href="@{/login}" th:text="#{screen.pm.button.cancel}">CANCEL</a>
+                <input class="standardButton col-md-4"
+                       name="cancel"
+                       accesskey="c"
+                       th:value="#{screen.pm.button.cancel}"
+                       type="button"
+                       th:onclick="'location.href=\'' + @{/login} + '\''" value="CANCEL"/>
             </div>
         </form>
         <p th:unless="${passwordManagementEnabled}"
