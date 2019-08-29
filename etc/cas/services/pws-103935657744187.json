@@ -3,7 +3,7 @@
   "serviceId" : "https://www.*.iesabroad.org.*"
   "name" : "IES",
   "id" : 103935657744187,
-  "evaluationOrder" : 11,
+  "evaluationOrder" : 14,
     "attributeReleasePolicy" : {
 	"@class" : "org.jasig.cas.services.ReturnAllAttributeReleasePolicy"
   },
