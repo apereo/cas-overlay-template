@@ -19,12 +19,17 @@
         <div class="ies-form col-md-6 offset-3">
             <h2 th:utext="#{screen.error.page.authdenied}">Authorization Denied</h2>
             <p th:utext="#{screen.error.page.permissiondenied}">You do not have permission to view this page.</p>
-            <input class="standardButton col-md-4 offset-4"
-                   accesskey="l"
-                   th:onclick="'location.href=\'' + @{/login} + '\''"
-                   th:value="#{screen.error.page.loginagain}"
-                   type="button"
-                   value="Login Again"/>
+            <div class="row mb-3">
+                <div class="col-md-4 offset-4">
+                    <input class="standardButton"
+                           accesskey="l"
+                           name="login"
+                           th:onclick="'location.href=\'' + @{/login} + '\''"
+                           th:value="#{screen.error.page.loginagain}"
+                           type="button"
+                           value="Login Again" />
+                </div>
+            </div>
         </div>
     </div>
 </main>
