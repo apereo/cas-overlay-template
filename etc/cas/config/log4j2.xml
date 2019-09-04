@@ -3,7 +3,7 @@
 <Configuration monitorInterval="5" packages="org.apereo.cas.logging">
     <Properties>
         <!-- 
-        Default log directory is the current directory but that can be overridden with -Dcas.log.dir=<logdir>
+        Default log directory is the current directory but that can be overridden with -Dcas.log.dir=<logdir> (not in 5.3 - MK)
         Or you can change this property to a new default
         -->
         <Property name="cas.log.dir" >.</Property>
@@ -14,7 +14,7 @@
         <Console name="console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d %p [%c] - &lt;%m&gt;%n"/>
         </Console>
-        <RollingFile name="file" fileName="${sys:cas.log.dir}/cas.log" append="true"
+        <RollingFile name="file" fileName="${sys:catalina.base}/logs/cas.log" append="true"
                      filePattern="${sys:cas.log.dir}/cas-%d{yyyy-MM-dd-HH}-%i.log">
             <PatternLayout pattern="%d %p [%c] - &lt;%m&gt;%n"/>
             <Policies>
@@ -23,7 +23,7 @@
                 <TimeBasedTriggeringPolicy />
             </Policies>
         </RollingFile>
-        <RollingFile name="auditlogfile" fileName="${sys:cas.log.dir}/cas_audit.log" append="true"
+        <RollingFile name="auditlogfile" fileName="${sys:catalina.base}/cas_audit.log" append="true"
                      filePattern="${sys:cas.log.dir}/cas_audit-%d{yyyy-MM-dd-HH}-%i.log">
             <PatternLayout pattern="%d %p [%c] - %m%n"/>
             <Policies>
@@ -33,8 +33,8 @@
             </Policies>
         </RollingFile>
 
-        <RollingFile name="perfFileAppender" fileName="${sys:cas.log.dir}/perfStats.log" append="true"
-                     filePattern="${sys:cas.log.dir}/perfStats-%d{yyyy-MM-dd-HH}-%i.log">
+        <RollingFile name="perfFileAppender" fileName="${sys:catalina.base}/perfStats.log" append="true"
+                     filePattern="${sys:catalina.base}/perfStats-%d{yyyy-MM-dd-HH}-%i.log">
             <PatternLayout pattern="%m%n"/>
             <Policies>
                 <OnStartupTriggeringPolicy />

@@ -58,26 +58,26 @@ public class IesPasswordConfiguration extends LdapAuthenticationConfiguration {
         log.debug("Creating datasource using: " + System.lineSeparator()
             + "datasource.username" + environment.getProperty("spring.datasource.username") + System.lineSeparator()
             + "datasource.url" + environment.getProperty("spring.datasource.url") + System.lineSeparator()
-            + "datasource.driver" + environment.getProperty("spring.datasource.driver") + System.lineSeparator()
+            + "datasource.driver" + environment.getProperty("spring.datasource.driver-class-name") + System.lineSeparator()
             + "datasource.username" + environment.getProperty("spring.datasource.username") + System.lineSeparator());
         return DataSourceBuilder
                 .create()
                 .username(environment.getProperty("spring.datasource.username"))
                 .password(environment.getProperty("spring.datasource.password"))
                 .url(environment.getProperty("spring.datasource.url"))
-                .driverClassName(environment.getProperty("spring.datasource.driver"))
+                .driverClassName(environment.getProperty("spring.datasource.driver-class-name"))
                 .build();
     }
 
     @Bean
     public EntityManagerFactory entityManagerFactory()  {
-        log.debug("Creating datasource using: " + System.lineSeparator()
+        log.debug("Creating entityManagerFactory using: " + System.lineSeparator()
                 + "datasource.username" + environment.getProperty("spring.datasource.username") + System.lineSeparator()
                 + "datasource.url" + environment.getProperty("spring.datasource.url") + System.lineSeparator()
-                + "datasource.driver" + environment.getProperty("spring.datasource.driver") + System.lineSeparator()
+                + "datasource.driver" + environment.getProperty("spring.datasource.driver-class-name") + System.lineSeparator()
                 + "datasource.username" + environment.getProperty("spring.datasource.username") + System.lineSeparator());
         try {
-            Class.forName(environment.getProperty("spring.datasource.url"));
+            Class.forName(environment.getProperty("spring.datasource.driver-class-name"));
         } catch (ClassNotFoundException e) {
             log.error(e.getMessage(), e);
         }
