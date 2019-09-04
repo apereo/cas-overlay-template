@@ -13,9 +13,11 @@
 <body class="login">
 
 <main role="main" class="container mt-3 mb-3">
-    <div layout:fragment="content" class="row" >
-        <div class="col-md">
-            <div th:replace="iesabroad/fragments/serviceui :: serviceUI"><a href="fragments/serviceui.html">service ui</a> fragment</div>
+    <div layout:fragment="content" class="row">
+        <div class="ies-form-header col-md-6 offset-3">
+            <img class="logo" th:src="@{${#themes.code('cas.logo.file')}}" alt="IES logo"/>
+        </div>
+        <div class="ies-form col-md-6 offset-3">
             <div th:replace="iesabroad/fragments/loginform :: loginform"><a href="fragments/loginform.html">Login Form goes
                 here</a></div>
         </div>
@@ -31,4 +33,3 @@
 </main>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 

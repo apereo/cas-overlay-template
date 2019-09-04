@@ -12,8 +12,11 @@
 
 <body>
 <main role="main" class="container mt-3 mb-3">
-    <div layout:fragment="content">
-        <div class="alert alert-danger">
+    <div layout:fragment="content" class="row">
+        <div class="ies-form-header col-md-6 offset-3">
+            <img class="logo" th:src="@{${#themes.code('cas.logo.file')}}" alt="IES logo"/>
+        </div>
+        <div class="ies-form col-md-6 offset-3">
             <h2 th:utext="#{screen.blocked.header}">Access Denied</h2>
             <p th:utext="#{screen.blocked.message}">You've entered the wrong password for the user too many times.
                 You've been throttled.</p>

@@ -11,8 +11,11 @@
 
 <body>
 <main role="main" class="container mt-3 mb-3">
-    <div layout:fragment="content">
-        <div class="alert alert-success">
+    <div layout:fragment="content" class="row">
+        <div class="ies-form-header col-md-6 offset-3">
+            <img class="logo" th:src="@{${#themes.code('cas.logo.file')}}" alt="IES logo"/>
+        </div>
+        <div class="ies-form col-md-6 offset-3">
             <h2 th:utext="#{screen.logout.header}">Logout successful</h2>
             <p th:utext="#{screen.logout.success}">You have successfully logged out of the Central Authentication
                 Service. You may <a href="${url}">log in</a> again.</p>

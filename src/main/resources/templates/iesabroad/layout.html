@@ -20,19 +20,12 @@
 </head>
 
 <body>
-<div th:replace="iesabroad/fragments/header :: header">
-    <a href="fragments/header.html">Header</a> fragment will go here
-</div>
 
 <main role="main" class="container mt-3 mb-3">
     <div layout:fragment="content" id="content">
         CAS content will go here
     </div>
 </main>
-
-<div th:replace="iesabroad/fragments/footer :: footer">
-    <a href="fragments/footer.html">Footer</a> fragment will go here
-</div>
 
 <script th:replace="fragments/scripts"/>
 </body>

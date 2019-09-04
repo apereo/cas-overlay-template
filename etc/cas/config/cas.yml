@@ -178,6 +178,8 @@ cas:
             signing:
                 key: bMpP_eHgIsL1kz_cnxEqYo9Bb384V70eZIvWctQ5V6xTO4P6wsQjFlglD9OSQNlFdb0mT2Q1E3qXdo05_tzrjQ
         secure: true
+    theme:
+        defaultThemeName: iesabroad
     ticket:
         tgt:
             timeToKillInSeconds: 28800
