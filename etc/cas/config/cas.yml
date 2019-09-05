@@ -194,9 +194,9 @@ cas:
 config:
     base: ${tomcat.location}/webapps/cas/etc
 datasource:
+    password: cerbadm.owner
+    url: jdbc:jtds:sqlserver://IESUSAUSSQLDEV02/IESApplicationDB;maxStatements=0
     driver: net.sourceforge.jtds.jdbc.Driver
-    password: VW5veFDrVIpwNw6lRcqu
-    url: jdbc:jtds:sqlserver://IESUSEGVSQL01/IESApplicationDB;maxStatements=0
     username: cerbadm_01_own
 ldap:
     bindCredential: 7Egej5DUs4
@@ -245,7 +245,7 @@ tomcat:
     location: file:///e:/vhost/tomcat.8.0.45.cas-pap-01
 
 ---
-# Overrides for local development
+# for local development
 spring:
     profiles: dev
     jpa:
@@ -253,7 +253,6 @@ spring:
 tomcat:
     location: file:///c:/local/services/Tomcat8.0
 logging:
-    config: ${config.base}/config/log4j2.xml
     level:
         org:
             apereo: DEBUG
@@ -264,5 +263,17 @@ logging:
 datasource:
     password: cerbadm.owner
     url: jdbc:jtds:sqlserver://IESUSAUSSQLDEV02/IESApplicationDB;maxStatements=0
+ldap:
+    ldapUrl: ldaps://IESUSAUSDC02.iesabroad.org:636
+
+---
+# for regular deployment (SYS, UAT and PRD)
+spring:
+    profiles: deploy
+tomcat:
+    location: file:///e:/vhost/tomcat.8.0.45.cas-pap-01
+datasource:
+    password: VW5veFDrVIpwNw6lRcqu
+    url: jdbc:jtds:sqlserver://IESUSEGVSQL01/IESApplicationDB;maxStatements=0
 ldap:
     ldapUrl: ldaps://IESUSAUSDC02.iesabroad.org:636

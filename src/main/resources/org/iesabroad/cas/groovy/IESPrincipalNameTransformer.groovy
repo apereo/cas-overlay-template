@@ -1,7 +1,6 @@
-package org.iesabroad.cas;
+package org.iesabroad.cas
 
-import org.apache.commons.lang.StringUtils;
-import org.apereo.cas.authentication.handler.PrincipalNameTransformer;
+import org.apache.commons.lang.StringUtils
 
 public class IESPrincipalNameTransformer {
 
@@ -34,7 +33,7 @@ public class IESPrincipalNameTransformer {
         } else if (sAMAccountName.length() > 20) {
             sAMAccountName = sAMAccountName.substring(0, 20);
         }
-
+        logger.info("attempting to login with converted username:" + sAMAccountName)
         return sAMAccountName;
     }
 
