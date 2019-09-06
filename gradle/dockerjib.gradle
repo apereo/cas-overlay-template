@@ -26,8 +26,8 @@ jib {
         ports = ['80', '443', '8080', '8443']
         labels = [version:casServerVersion, name:project.name, group:project.group]
     }
-    extraDirectory {
-        path = file('src/main/jib')
+    extraDirectories {
+        paths = 'src/main/jib'
         permissions = [
             '/docker/entrypoint.sh': '755'
         ]
