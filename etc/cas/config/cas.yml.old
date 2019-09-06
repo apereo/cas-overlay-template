@@ -1,0 +1,279 @@
+cas:
+    authn:
+        accept:
+            users: ''
+        attributeRepository:
+            defaultAttributesToRelease: cn,givenName,uid,personRole,email
+            expirationTime: 0
+            jdbc:
+            -   attributes:
+                    role: personRole
+                columnMappings:
+                    attribute: App_id
+                driverClass: ${datasource.driver}
+                healthQuery: select 1
+                password: ${datasource.password}
+                singleRow: false
+                sql: SELECT 'role' as attribute, App_id FROM cerbadm.CER_ACCOUNT_APP as value WHERE {0}
+                url: ${datasource.url}
+                user: ${datasource.username}
+                username: uid
+        ldap:
+        -   baseDn: DC=iesabroad,DC=org
+            bindCredential: ${ldap.bindCredential}
+            bindDn: ${ldap.bindDn}
+            followReferrals: ${ldap.followReferrals}
+            hostnameVerifier: ${ldap.hostnameVerifier}
+            ldapUrl: ${ldap.ldapUrl}
+            maxPoolSize: ${ldap.maxPoolSize}
+            minPoolSize: ${ldap.minPoolSize}
+            name: Active Directory 1 - OU=IES
+            order: 0
+            passwordPolicy:
+                accountStateHandlingEnabled: ${passwordPolicy.accountStateHandlingEnabled}
+                customPolicyClass: ${passwordPolicy.customPolicyClass}
+                enabled: ${passwordPolicy.enabled}
+                warnAll: ${passwordPolicy.warnAll}
+            poolPassivator: ${ldap.poolPassivator}
+            principalAttributeId: ${ldap.principalAttributeId}
+            principalTransformation:
+                groovy:
+                    location: ${ldap.principalTransformation}
+            searchFilter: ${ldap.searchFilter}
+            type: ${ldap.type}
+            useSsl: ${ldap.useSsl}
+        -   baseDn: OU=Users,OU=SAF,DC=iesabroad,DC=org
+            bindCredential: ${ldap.bindCredential}
+            bindDn: ${ldap.bindDn}
+            followReferrals: ${ldap.followReferrals}
+            hostnameVerifier: ${ldap.hostnameVerifier}
+            ldapUrl: ${ldap.ldapUrl}
+            maxPoolSize: ${ldap.maxPoolSize}
+            minPoolSize: ${ldap.minPoolSize}
+            name: Active Directory 2 - OU=Users,OU=SAF
+            order: 1
+            passwordPolicy:
+                accountStateHandlingEnabled: ${passwordPolicy.accountStateHandlingEnabled}
+                customPolicyClass: ${passwordPolicy.customPolicyClass}
+                enabled: ${passwordPolicy.enabled}
+                warnAll: ${passwordPolicy.warnAll}
+            poolPassivator: ${ldap.poolPassivator}
+            principalAttributeId: ${ldap.principalAttributeId}
+            principalTransformation:
+                groovy:
+                    location: ${ldap.principalTransformation}
+            searchFilter: ${ldap.searchFilter}
+            type: ${ldap.type}
+            useSsl: ${ldap.useSsl}
+        -   baseDn: OU=Users,OU=China,OU=SAF Country Offices,DC=iesabroad,DC=org
+            bindCredential: ${ldap.bindCredential}
+            bindDn: ${ldap.bindDn}
+            followReferrals: ${ldap.followReferrals}
+            hostnameVerifier: ${ldap.hostnameVerifier}
+            ldapUrl: ${ldap.ldapUrl}
+            maxPoolSize: ${ldap.maxPoolSize}
+            minPoolSize: ${ldap.minPoolSize}
+            name: Active Directory 3 - OU=Users,OU=China,OU=SAF Country Offices
+            order: 2
+            passwordPolicy:
+                accountStateHandlingEnabled: ${passwordPolicy.accountStateHandlingEnabled}
+                customPolicyClass: ${passwordPolicy.customPolicyClass}
+                enabled: ${passwordPolicy.enabled}
+                warnAll: ${passwordPolicy.warnAll}
+            poolPassivator: ${ldap.poolPassivator}
+            principalAttributeId: ${ldap.principalAttributeId}
+            principalTransformation:
+                groovy:
+                    location: ${ldap.principalTransformation}
+            searchFilter: ${ldap.searchFilter}
+            type: ${ldap.type}
+            useSsl: ${ldap.useSsl}
+        -   baseDn: OU=Users,OU=Japan,OU=SAF Country Offices,DC=iesabroad,DC=org
+            bindCredential: ${ldap.bindCredential}
+            bindDn: ${ldap.bindDn}
+            followReferrals: ${ldap.followReferrals}
+            hostnameVerifier: ${ldap.hostnameVerifier}
+            ldapUrl: ${ldap.ldapUrl}
+            maxPoolSize: ${ldap.maxPoolSize}
+            minPoolSize: ${ldap.minPoolSize}
+            name: Active Directory 4 - OU=Users,OU=Japan,OU=SAF Country Offices
+            order: 3
+            passwordPolicy:
+                accountStateHandlingEnabled: ${passwordPolicy.accountStateHandlingEnabled}
+                customPolicyClass: ${passwordPolicy.customPolicyClass}
+                enabled: ${passwordPolicy.enabled}
+                warnAll: ${passwordPolicy.warnAll}
+            poolPassivator: ${ldap.poolPassivator}
+            principalAttributeId: ${ldap.principalAttributeId}
+            principalTransformation:
+                groovy:
+                    location: ${ldap.principalTransformation}
+            searchFilter: ${ldap.searchFilter}
+            type: ${ldap.type}
+            useSsl: ${ldap.useSsl}
+        -   baseDn: OU=Users,OU=Korea,OU=SAF Country Offices,DC=iesabroad,DC=org
+            bindCredential: ${ldap.bindCredential}
+            bindDn: ${ldap.bindDn}
+            followReferrals: ${ldap.followReferrals}
+            hostnameVerifier: ${ldap.hostnameVerifier}
+            ldapUrl: ${ldap.ldapUrl}
+            maxPoolSize: ${ldap.maxPoolSize}
+            minPoolSize: ${ldap.minPoolSize}
+            name: Active Directory 5 - OU=Users,OU=Korea,OU=SAF Country Offices
+            order: 4
+            passwordPolicy:
+                accountStateHandlingEnabled: ${passwordPolicy.accountStateHandlingEnabled}
+                customPolicyClass: ${passwordPolicy.customPolicyClass}
+                enabled: ${passwordPolicy.enabled}
+                warnAll: ${passwordPolicy.warnAll}
+            poolPassivator: ${ldap.poolPassivator}
+            principalAttributeId: sAMAccountName
+            principalTransformation:
+                groovy:
+                    location: ${ldap.principalTransformation}
+            searchFilter: ${ldap.searchFilter}
+            type: ${ldap.type}
+            useSsl: ${ldap.useSsl}
+        pm:
+            autoLogin: false
+            enabled: true
+            ldap:
+                baseDn: OU=Service Accounts,DC=iesabroad,DC=org
+                bindCredential: ${ldap.bindCredential}
+                bindDn: ${ldap.bindDn}
+                followReferrals: ${ldap.followReferrals}
+                ldapUrl: ${ldap.ldapUrl}
+                name: Active Directory 1
+                poolPassivator: ${ldap.poolPassivator}
+                searchFilter: ${ldap.searchFilter}
+                useSsl: ${ldap.useSsl}
+                validator:
+                    baseDn: DC=iesabroad,DC=org
+            policyPattern: ((?=.*[A-Z])(?=.*?[a-z])(?=.*\d)|(?=.*[A-Z])(?=.*[a-z])(?=.*[^a-zA-Z0-9])|(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9])|(?=.*[a-z])(?=.*\d)(?=.*[^a-zA-Z0-9])).{8,}
+            reset:
+                expirationMinutes: 30
+                mail:
+                    from: support@iesabroad.org
+                    subject: Password Reset Request
+                securityQuestionsEnabled: false
+    host:
+        name: cas.iesabroad.org
+    logout:
+        followServiceRedirects: true
+    monitor:
+        endpoints:
+            enabled: true
+            sensitive: false
+    server:
+        name: https://${cas.host.name}
+        prefix: ${cas.server.name}/cas
+    serviceRegistry:
+        initFromJson: true
+        json:
+            location: ${config.base}/services
+    tgc:
+        crypto:
+            encryption:
+                key: r88iOMdbRMLOkITV54kax4WgadTdzUYSBXNhOp_oqS0
+            signing:
+                key: bMpP_eHgIsL1kz_cnxEqYo9Bb384V70eZIvWctQ5V6xTO4P6wsQjFlglD9OSQNlFdb0mT2Q1E3qXdo05_tzrjQ
+        secure: true
+    theme:
+        defaultThemeName: iesabroad
+    ticket:
+        tgt:
+            timeToKillInSeconds: 28800
+            timeout:
+                maxTimeToLiveInSeconds: 1800
+    webflow:
+        crypto:
+            encryption:
+                key: X+HoFema76WxIrlHD+ZSGA==
+            signing:
+                key: iVx3jU9qrVtQJvT1FqVHQxP8X8WZOjQuzy2mi-xEi3zlDlJuyJ6p7ysIbmEIXLotSKR3bzjjuAbLAJR81xISSw
+config:
+    base: ${tomcat.location}/webapps/cas/etc
+datasource:
+    password: cerbadm.owner
+    url: jdbc:jtds:sqlserver://IESUSAUSSQLDEV02/IESApplicationDB;maxStatements=0
+    driver: net.sourceforge.jtds.jdbc.Driver
+    username: cerbadm_01_own
+ldap:
+    bindCredential: 7Egej5DUs4
+    bindDn: cn=A Winston,CN=Users,DC=iesabroad,DC=org
+    followReferrals: false
+    hostnameVerifier: ANY
+    ldapUrl: ldaps://IESUSAUSDC01.iesabroad.org:636
+    maxPoolSize: 2
+    minPoolSize: 1
+    poolPassivator: NONE
+    principalAttributeId: sAMAccountName
+    principalTransformation: classpath:/org/iesabroad/cas/groovy/IESPrincipalNameTransformer.groovy
+    searchFilter: sAMAccountName={user}
+    type: AUTHENTICATED
+    useSsl: true
+logging:
+    config: ${config.base}/config/log4j2.xml
+passwordPolicy:
+    accountStateHandlingEnabled: true
+    customPolicyClass: org.iesabroad.cas.IesAuthenticationResponseHandler
+    enabled: true
+    warnAll: false
+spring:
+    datasource:
+        driver-class-name: ${datasource.driver}
+        password: ${datasource.password}
+        url: ${datasource.url}
+        username: ${datasource.username}
+    jpa:
+        database-platform: org.hibernate.dialect.SQLServer2012Dialect
+    mail:
+        host: mail.iesabroad.org
+        password: ''
+        properties:
+            mail:
+                smtp:
+                    auth: false
+                    starttls:
+                        enable: false
+        testConnection: false
+        username: ''
+    thymeleaf:
+        cache: false
+        mode: LEGACYHTML5
+tomcat:
+    location: file:///e:/vhost/tomcat.8.0.45.cas-pap-01
+
+---
+# for local development
+spring:
+    profiles: dev
+    jpa:
+        show-sql: true
+tomcat:
+    location: file:///c:/local/services/Tomcat8.0
+logging:
+    level:
+        org:
+            apereo: DEBUG
+            apereo.cas.services.AbstractServicesManager: WARN
+            iesabroad: DEBUG
+            jasig:
+                cas: DEBUG
+datasource:
+    password: cerbadm.owner
+    url: jdbc:jtds:sqlserver://IESUSAUSSQLDEV02/IESApplicationDB;maxStatements=0
+ldap:
+    ldapUrl: ldaps://IESUSAUSDC02.iesabroad.org:636
+
+---
+# for regular deployment (SYS, UAT and PRD)
+spring:
+    profiles: deploy
+tomcat:
+    location: file:///e:/vhost/tomcat.8.0.45.cas-pap-01
+datasource:
+    password: VW5veFDrVIpwNw6lRcqu
+    url: jdbc:jtds:sqlserver://IESUSEGVSQL01/IESApplicationDB;maxStatements=0
+ldap:
+    ldapUrl: ldaps://IESUSAUSDC02.iesabroad.org:636
