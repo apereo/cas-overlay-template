@@ -144,3 +144,4 @@ chmod +x *.sh
 ./docker-build.sh
 ./docker-run.sh
 ```
+You may then connect to https://localhost:8443/cas/ and log in as casuser / Mellon
