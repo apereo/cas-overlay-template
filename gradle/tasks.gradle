@@ -225,6 +225,7 @@ task getResource(group: "build", description: "Fetch a CAS resource and move it 
 
         def results = fileTree(explodedResourcesDir).matching {
             include "**/${resourceName}.*"
+            include "**/${resourceName}"
         }
         if (results.isEmpty()) {
             println "No resources could be found matching ${resourceName}"
