@@ -16,6 +16,9 @@ Generic CAS WAR overlay to exercise the latest versions of CAS. This overlay cou
 # Configuration
 
 The `etc` directory contains the configuration files and directories that need to be copied to `/etc/cas/config`.
+```bash
+/usr/bin/sudo ./build.sh copy
+```
 
 # Build
 
