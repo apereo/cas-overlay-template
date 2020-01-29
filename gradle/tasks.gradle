@@ -13,6 +13,7 @@ buildscript {
         mavenLocal()
         mavenCentral()
         jcenter()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
     }
     dependencies {
         classpath "org.apache.ivy:ivy:${project.ivyVersion}"
