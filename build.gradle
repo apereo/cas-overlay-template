@@ -56,6 +56,7 @@ tasks.findByName("jib")
     .finalizedBy(deleteWebAppFromJib)
     
 configurations.all {
+    exclude module: 'HikariCP-java7'
     resolutionStrategy {
         cacheChangingModulesFor 0, "seconds"
         cacheDynamicVersionsFor 0, "seconds"
@@ -94,6 +95,7 @@ bootWar {
             from "org.apereo.cas:cas-server-webapp${project.appServer}:${casServerVersion}@war"
             provided = false
             //excludes = ["WEB-INF/lib/somejar-1.0*"]
+            excludes = ["**/HikariCP-java7-2.4.13.jar"]
         }
     }
 }
