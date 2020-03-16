@@ -46,6 +46,7 @@ dependencies {
     // Other CAS dependencies/modules may be listed here...
     // compile "org.apereo.cas:cas-server-support-json-service-registry:${casServerVersion}"
     compile "org.apereo.cas:cas-server-webapp:${project.'cas.version'}"
+    compile "org.apereo.cas:cas-server-support-json-service-registry:${project.'cas.version'}"
 }
 
 tasks.findByName("jibDockerBuild")
