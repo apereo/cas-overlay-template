@@ -105,3 +105,18 @@ Invokes the CAS Command Line Shell. For a list of commands either use no argumen
 ```bash
 ./build.sh cli
 ```
+
+## Docker
+
+Build the docker image
+
+```bash
+docker build -t cas-overlay-template .
+```
+
+Run the docker the conatiner
+
+```bash
+docker run --rm -it -p 8443:8443 -p 8080:8080 cas-overlay-template:latest
+```
+
