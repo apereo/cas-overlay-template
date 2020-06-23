@@ -116,7 +116,7 @@ task debug(group: "CAS", description: "Debug the CAS web application in embedded
     }
 }
 
-task downloadShell(group: "shell", description: "Download CAS shell jar from snapshot or release maven repo") {
+task downloadShell(group: "Shell", description: "Download CAS shell jar from snapshot or release maven repo") {
     doFirst {
         mkdir "${project.shellDir}"
     }
@@ -143,14 +143,14 @@ task downloadShell(group: "shell", description: "Download CAS shell jar from sna
     }
 }
 
-task runShell(group: "shell", description: "Run the CAS shell") {
+task runShell(group: "Shell", description: "Run the CAS shell") {
     dependsOn downloadShell
     doLast {
         println "Run the following command to launch the shell:\n\tjava -jar ${project.shellDir}/cas-server-support-shell-${casServerVersion}.jar"
     }
 }
 
-task debugShell(group: "shell", description: "Run the CAS shell with debug options, wait for debugger on port 5005") {
+task debugShell(group: "Shell", description: "Run the CAS shell with debug options, wait for debugger on port 5005") {
     dependsOn downloadShell
     doLast {
         println """
