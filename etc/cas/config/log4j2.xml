@@ -60,17 +60,15 @@
         <AsyncLogger name="org.apache" level="warn" />
         <AsyncLogger name="org.apache.http" level="error" />
 
-        <AsyncLogger name="org.springframework.boot" level="${sys:spring.boot.log.level" includeLocation="true"/>
+        <AsyncLogger name="org.springframework.boot" level="${sys:spring.boot.log.level}" includeLocation="true"/>
         <AsyncLogger name="org.springframework.boot.context.embedded" level="info" includeLocation="true" />
-        <AsyncLogger name="org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration"
-        level="${sys:spring.security.log.level}" includeLocation="true" />
+        <AsyncLogger name="org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration" level="${sys:spring.security.log.level}" includeLocation="true" />
         <AsyncLogger name="org.springframework.boot.autoconfigure.security" level="${sys:spring.security.log.level}" includeLocation="true"/>
         <AsyncLogger name="org.springframework.boot.devtools" level="off" includeLocation="true"/>
 
         <AsyncLogger name="org.springframework" level="warn" includeLocation="true" />
         <AsyncLogger name="org.springframework.webflow" level="${sys:spring.webflow.log.level}" includeLocation="true"/>
         <AsyncLogger name="org.springframework.aop" level="warn" includeLocation="true" />
-        <AsyncLogger name="org.springframework.web" level="warn" includeLocation="true"/>
         <AsyncLogger name="org.springframework.session" level="warn" includeLocation="true"/>
         <AsyncLogger name="org.springframework.scheduling" level="info" includeLocation="true"/>
         <AsyncLogger name="org.springframework.cloud.vault" level="warn" includeLocation="true" />
@@ -109,8 +107,8 @@
         <!-- All Loggers inherit appenders specified here, unless additivity="false" on the Logger -->
         <AsyncRoot level="warn">
             <AppenderRef ref="casFile"/>
-            <!-- 
-                 For deployment to an application server running as service, 
+            <!--
+                 For deployment to an application server running as service,
                  delete the casConsole appender below
             -->
             <AppenderRef ref="casConsole"/>
