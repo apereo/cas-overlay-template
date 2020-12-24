@@ -18,7 +18,7 @@ buildscript {
             mavenContent { snapshotsOnly() }
         }
     }
-    
+
     dependencies {
         classpath "org.apache.ivy:ivy:${project.ivyVersion}"
         classpath "org.apereo.cas:cas-server-core-api-configuration-model:${project.'cas.version'}"
@@ -56,12 +56,16 @@ task explodeWarOnly(type: Copy, group: "CAS", description: "Explodes the CAS web
 
 task explodeWar(type: Copy, group: "CAS", description: "Explodes the CAS archive and resources jar from the CAS web application archive") {
     dependsOn explodeWarOnly
-    from zipTree("${explodedDir}/WEB-INF/lib/${templateViewsJarName}-${casServerVersion}.jar")
+    from(zipTree("${explodedDir}/WEB-INF/lib/${templateViewsJarName}-${casServerVersion}.jar")) {
+        exclude 'META-INF/MANIFEST.MF'
+    }
     into explodedResourcesDir
 
-    from zipTree("${explodedDir}/WEB-INF/lib/${resourcesJarName}-${casServerVersion}.jar")
+    from(zipTree("${explodedDir}/WEB-INF/lib/${resourcesJarName}-${casServerVersion}.jar")) {
+        exclude 'META-INF/MANIFEST.MF'
+    }
     into explodedResourcesDir
-    
+
     doLast {
         println "Exploded WAR resources into ${explodedResourcesDir}"
     }
@@ -234,7 +238,7 @@ task listTemplateViews(group: "CAS", description: "List all CAS views") {
         fileTree(explodedResourcesDir).matching {
             include "**/*.html"
         }
-        .collect { 
+        .collect {
             return it.path.replace(explodedResourcesDir, "")
         }
         .toSorted()
@@ -348,7 +352,7 @@ task createTheme() {
                         "${theme}" {
                             fragments {
 
-                            } 
+                            }
                         }
                     }
 
