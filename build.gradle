@@ -543,7 +543,7 @@ bootWar {
 
 
             provided = false
-            excludes = ["WEB-INF/lib/servlet-api-2*.jar"]
+            excludes = ["WEB-INF/lib/servlet-api-2*.jar", "**/tomcat-embed-el-9.0.52.jar"]
             
             /*
             excludes = ["WEB-INF/lib/somejar-1.0*"]
