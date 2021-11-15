@@ -1,0 +1,50 @@
+apply plugin: "com.google.cloud.tools.jib"
+
+jib {
+    from {
+        image = project.baseDockerImage
+    }
+    to {
+        image = "${project.containerImageOrg}/${project.containerImageName}"
+        /**
+             ecr-login: Amazon Elastic Container Registry (ECR)
+             gcr: Google Container Registry (GCR)
+             osxkeychain: Docker Hub
+         */
+        credHelper = "osxkeychain"
+        /**
+        auth {
+            username = "*******"
+            password = "*******"
+        }
+        */
+        tags = [project.version]
+    }
+    container {
+        creationTime = "USE_CURRENT_TIMESTAMP"
+        entrypoint = ['/docker/entrypoint.sh']
+        ports = ['80', '443', '8080', '8443', '8444', '8761', '8888']
+        labels = [version:project.version, name:project.name, group:project.group, org:project.containerImageOrg]
+        workingDirectory = '/docker/cas/war'
+    }
+    extraDirectories {
+        paths {
+          path {
+            from = file('src/main/jib')
+          }
+          path {
+            from = file('etc/cas')
+            into = '/etc/cas'
+          }
+          path {
+            from = file("build/libs")
+            into = "/docker/cas/war"
+          }
+        }
+        permissions = [
+            '/docker/entrypoint.sh': '755'
+        ]
+    }
+    allowInsecureRegistries = project.allowInsecureRegistries
+}
+
