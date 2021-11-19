@@ -230,7 +230,7 @@ task createKeystore(group: "CAS", description: "Create CAS keystore") {
     }
 }
 
-task unzipWAR(type: Copy, group: "CAS", description: "Explodes the CAS web application archive") {
+task unzipWAR(type: Sync, group: "CAS", description: "Explodes the CAS web application archive") {
     dependsOn 'build'
     from zipTree("build/libs/cas.war")
     into "${buildDir}/app"
