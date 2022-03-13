@@ -1,7 +1,0 @@
-target/**
-build/**
-bin/**
-.idea/**
-.history/**
-.github/**
-.git/**
