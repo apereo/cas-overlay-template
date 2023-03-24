@@ -1,0 +1,149 @@
+import org.apache.tools.ant.taskdefs.condition.*
+import org.gradle.internal.logging.text.*
+import org.apereo.cas.metadata.*
+import java.nio.file.*
+import static org.gradle.internal.logging.text.StyledTextOutput.Style
+
+buildscript {
+    repositories {
+        if (project.privateRepoUrl) {
+          maven {
+            url project.privateRepoUrl
+            credentials {
+              username = project.privateRepoUsername
+              password = System.env.PRIVATE_REPO_TOKEN
+            }
+          }
+        }
+        mavenLocal()
+        mavenCentral()
+        gradlePluginPortal()
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots'
+            mavenContent { snapshotsOnly() }
+        }
+        maven {
+            url "https://repo.spring.io/milestone"
+            mavenContent { releasesOnly() }
+        }
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${project.springBootVersion}"
+        classpath "io.freefair.gradle:maven-plugin:${project.gradleFreeFairPluginVersion}"
+        classpath "io.freefair.gradle:lombok-plugin:${project.gradleFreeFairPluginVersion}"
+        classpath "io.spring.gradle:dependency-management-plugin:${project.gradleDependencyManagementPluginVersion}"
+        classpath "com.google.cloud.tools:jib-gradle-plugin:${project.jibVersion}"
+
+        classpath "de.undercouch:gradle-download-task:${project.gradleDownloadTaskVersion}"
+        classpath "org.apereo.cas:cas-server-core-api-configuration-model:${project.'cas.version'}"
+        classpath "org.apereo.cas:cas-server-core-configuration-metadata-repository:${project.'cas.version'}"
+    }
+}
+
+repositories {
+    if (project.privateRepoUrl) {
+      maven {
+        url project.privateRepoUrl
+        credentials {
+          username = project.privateRepoUsername
+          password = System.env.PRIVATE_REPO_TOKEN
+        }
+      }
+    }
+    mavenLocal()
+    mavenCentral()
+    maven { url 'https://oss.sonatype.org/content/repositories/releases' }
+    maven {
+        url 'https://oss.sonatype.org/content/repositories/snapshots'
+        mavenContent { snapshotsOnly() }
+    }
+    maven {
+        url 'https://build.shibboleth.net/nexus/content/repositories/releases/'
+        mavenContent { releasesOnly() }
+    }
+    maven {
+        url "https://build.shibboleth.net/nexus/content/repositories/snapshots"
+        mavenContent { snapshotsOnly() }
+    }
+    maven {
+        url "https://repo.spring.io/milestone"
+        mavenContent { releasesOnly() }
+    }
+}
+
+apply plugin: "io.freefair.war-overlay"
+apply plugin: "war"
+apply plugin: "org.springframework.boot"
+apply plugin: "io.freefair.lombok"
+
+apply from: rootProject.file("gradle/springboot.gradle")
+apply from: rootProject.file("gradle/jib.gradle")
+apply from: rootProject.file("gradle/tasks.gradle")
+
+
+configurations.all {
+    resolutionStrategy {
+        cacheChangingModulesFor 0, "seconds"
+        cacheDynamicVersionsFor 0, "seconds"
+        preferProjectModules()
+        def failIfConflict = project.hasProperty("failOnVersionConflict") && Boolean.valueOf(project.getProperty("failOnVersionConflict"))
+        if (failIfConflict) {
+            failOnVersionConflict()
+        }
+    }
+    exclude(group: "cglib", module: "cglib")
+    exclude(group: "cglib", module: "cglib-full")
+    exclude(group: "org.slf4j", module: "slf4j-log4j12")
+    exclude(group: "org.slf4j", module: "slf4j-simple")
+    exclude(group: "org.slf4j", module: "jcl-over-slf4j")
+    exclude(group: "org.apache.logging.log4j", module: "log4j-to-slf4j")
+}
+
+war {
+    entryCompression = ZipEntryCompression.STORED
+    enabled = false
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(project.targetCompatibility)
+    }
+}
+
+bootBuildImage {
+    imageName = "${project.'containerImageOrg'}/${project.'containerImageName'}:${project.version}"
+}
+
+dependencies {
+    /**
+    * Do NOT modify the lines below or else you will risk breaking dependency management.
+    */
+    implementation enforcedPlatform("org.apereo.cas:cas-server-support-bom:${project.'cas.version'}")
+    implementation platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+
+    /**
+     * CAS dependencies and modules may be listed here.
+     *
+     * There is no need to specify the version number for each dependency
+     * since versions are all resolved and controlled by the dependency management
+     * plugin via the CAS bom.
+     **/
+ 
+    /**
+    * Do NOT modify the lines below or else you will risk breaking the build.
+    */
+    implementation "org.apereo.cas:cas-server-core-api-configuration-model"
+    implementation "org.apereo.cas:cas-server-webapp-init"
+
+    if (project.hasProperty("casModules")) {
+        def dependencies = project.getProperty("casModules").split(",")
+        dependencies.each {
+            def projectsToAdd = rootProject.subprojects.findAll {project ->
+                project.name == "cas-server-core-${it}" || project.name == "cas-server-support-${it}"
+            }
+            projectsToAdd.each {implementation it}
+        }
+    }
+    developmentOnly "org.springframework.boot:spring-boot-devtools:${project.springBootVersion}"
+}
+

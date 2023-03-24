@@ -1,0 +1,78 @@
+apply plugin: "com.google.cloud.tools.jib"
+
+['jibDockerBuild', 'jibBuildTar', 'jib'].each { taskName ->
+    getTasksByName(taskName, true).each(it -> {
+        it.notCompatibleWithConfigurationCache("Jib is not compatible with configuration cache");
+        it.enabled = !gradle.startParameter.isConfigurationCacheRequested()
+    }); 
+}
+
+def imagePlatforms = project.dockerImagePlatform.split(",")
+def dockerUsername = providers.systemProperty("dockerUsername").getOrNull()
+def dockerPassword = providers.systemProperty("dockerPassword").getOrNull()
+
+jib {
+    if (gradle.startParameter.isConfigurationCacheRequested()) {
+        def fg = 31
+        def bg = 49
+        def style = "${(char)27}[$fg;$bg"+"m"
+        println(style + "Running Jib tasks will require the command-line option: --no-configuration-cache")
+        println(style + "Jib does not support the Gradle configuration cache; Please see https://github.com/GoogleContainerTools/jib/issues/3132")
+        println(style + "Jib tasks are disabled.")
+    }
+    from {
+        image = project.baseDockerImage
+        platforms {
+            imagePlatforms.each {
+                def given = it.split(":")
+                platform {
+                    architecture = given[0]
+                    os = given[1]
+                }
+            }
+        }
+    }
+    to {
+        image = "${project.containerImage}:${project.version}"
+        /**
+             ecr-login: Amazon Elastic Container Registry (ECR)
+             gcr: Google Container Registry (GCR)
+             osxkeychain: Docker Hub
+         */
+        credHelper = "osxkeychain"
+        if (dockerUsername != null && dockerPassword != null) {
+            auth {
+                username = "${dockerUsername}"
+                password = "${dockerPassword}"
+            }
+        }
+        tags = [project.version]
+    }
+    container {
+        creationTime = "USE_CURRENT_TIMESTAMP"
+        entrypoint = ['/docker/entrypoint.sh']
+        ports = ['80', '443', '8080', '8443', '8444', '8761', '8888', '5000']
+        labels = [version:project.version, name:project.name, group:project.group, org:project.containerImageOrg]
+        workingDirectory = '/docker/cas/war'
+    }
+    extraDirectories {
+        paths {
+          path {
+            from = file('src/main/jib')
+          }
+          path {
+            from = file('etc/cas')
+            into = '/etc/cas'
+          }
+          path {
+            from = file("build/libs")
+            into = "/docker/cas/war"
+          }
+        }
+        permissions = [
+            '/docker/entrypoint.sh': '755'
+        ]
+    }
+    allowInsecureRegistries = project.allowInsecureRegistries
+}
+
