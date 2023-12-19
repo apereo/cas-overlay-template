@@ -293,18 +293,7 @@ dependencies {
      * plugin via the CAS bom.
      **/
     implementation "org.apereo.cas:cas-server-support-rest"
- 
 
-    if (project.hasProperty("casModules")) {
-        def dependencies = project.getProperty("casModules").split(",")
-        dependencies.each {
-            def projectsToAdd = rootProject.subprojects.findAll {project ->
-                project.name == "cas-server-core-${it}" || project.name == "cas-server-support-${it}"
-            }
-            projectsToAdd.each {implementation it}
-        }
-    }
-    
     testImplementation "org.springframework.boot:spring-boot-starter-test"
 }
 
