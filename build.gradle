@@ -11,7 +11,7 @@ buildscript {
             url project.privateRepoUrl
             credentials {
               username = project.privateRepoUsername
-              password = project.privateRepoPassword
+              password = System.env.PRIVATE_REPO_TOKEN
             }
           }
         }
@@ -46,7 +46,7 @@ repositories {
         url project.privateRepoUrl
         credentials {
           username = project.privateRepoUsername
-          password = project.privateRepoPassword
+          password = System.env.PRIVATE_REPO_TOKEN
         }
       }
     }
