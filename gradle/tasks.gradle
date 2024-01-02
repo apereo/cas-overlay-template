@@ -2,6 +2,16 @@ import org.apereo.cas.metadata.*
 import java.nio.file.*
 buildscript {
     repositories {
+    	if (project.privateRepoUrl) {
+      		maven {
+        		url project.privateRepoUrl
+        		credentials {
+          			username = project.privateRepoUsername
+          			password = System.env.PRIVATE_REPO_TOKEN
+        		}
+      		}
+    	}
+
         mavenLocal()
         mavenCentral()
         gradlePluginPortal()
