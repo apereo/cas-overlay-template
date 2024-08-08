@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "pino": "9.3.2",
+    "pino-pretty": "11.2.2",
+    "puppeteer": "23.0.2"
+  }
+}
