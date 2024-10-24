@@ -1,3 +1,4 @@
+# IMPORTANT NOTE<br/>******************************************************<br/>This repository is always automatically generated from the [CAS Initializr](https://github.com/apereo/cas-initializr). Do NOT submit pull requests here as the change-set will be overwritten on the next sync. To learn more, please visit the [CAS documentation](https://apereo.github.io/cas).<br/>******************************************************<br/>
 Apereo CAS WAR Overlay Template
 =====================================
 
@@ -370,4 +371,3 @@ When you are ready, you can run the actual recipe:
 This will run the selected recipes and apply the changes. This will write changes locally to your source files on disk.
 Afterward, review the changes, and when you are comfortable with the changes, commit them.
 The run goal generates warnings in the build log wherever it makes changes to source files.
-
