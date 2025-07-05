@@ -1,0 +1,35 @@
+name: Build
+
+env:
+  JAVA_OPTS: "-Xms512m -Xmx6048m -Xss128m -XX:ReservedCodeCacheSize=512m -XX:+UseG1GC"
+  GRADLE_OPTS: "-Xms512m -Xmx6048m -Xss128m -XX:ReservedCodeCacheSize=512m -XX:+UseG1GC"
+  TERM: xterm-256color
+
+on:
+  push:
+    branches: [ 7.1 ]
+  pull_request:
+    branches: [ 7.1 ]
+
+concurrency:
+  group: "workflow = ${{ github.workflow }}, ref = ${{ github.event.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+  
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        jdk: [ 21 ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK ${{ matrix.jdk }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.jdk }}
+          distribution: 'corretto'
+      - name: Build with JDK ${{ matrix.jdk }} on ${{ matrix.os }}
+        run: ./gradlew build
+
