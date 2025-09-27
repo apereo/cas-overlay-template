@@ -2,6 +2,6 @@
   "dependencies": {
     "pino-pretty": "13.1.1",
     "puppeteer": "24.17.1",
-    "pino": "9.9.1"
+    "pino": "9.9.4"
   }
 }
