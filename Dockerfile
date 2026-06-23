@@ -9,7 +9,7 @@ ARG JAVA_TOOL_OPTIONS="--enable-native-access=ALL-UNNAMED"
 ENV JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS}"
 
 WORKDIR /cas-overlay
-COPY ./src src/
+
 COPY ./gradle/ gradle/
 COPY ./gradlew ./settings.gradle ./build.gradle ./gradle.properties ./lombok.config ./
 
@@ -18,6 +18,8 @@ RUN mkdir -p ~/.gradle \
     && echo "org.gradle.configureondemand=true" >> ~/.gradle/gradle.properties \
     && chmod 750 ./gradlew \
     && ./gradlew --version;
+
+COPY ./src src/    
 
 RUN ./gradlew clean build $EXT_BUILD_COMMANDS --parallel --no-daemon -Pexecutable=false $EXT_BUILD_OPTIONS;
 
