@@ -1,0 +1,1327 @@
+import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.UntrackedTask
+import org.gradle.process.ExecOperations
+
+import javax.inject.Inject
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
+import java.util.zip.ZipInputStream
+
+@UntrackedTask(because = "Interactive task that always prompts and compares local overlay files against an upstream CAS archive.")
+abstract class CasOverlayDiffTask extends DefaultTask {
+    private static final String RESET = "\u001B[0m"
+    private static final String BOLD = "\u001B[1m"
+    private static final String DIM = "\u001B[2m"
+    private static final String GREEN = "\u001B[32m"
+    private static final String YELLOW = "\u001B[33m"
+    private static final String BLUE = "\u001B[34m"
+    private static final String MAGENTA = "\u001B[35m"
+    private static final String CYAN = "\u001B[36m"
+
+    @Inject
+    abstract ExecOperations getExecOperations()
+
+    @Input
+    abstract Property<String> getDefaultCasVersion()
+
+    @Internal
+    abstract DirectoryProperty getProjectRootDir()
+
+    @OutputDirectory
+    abstract DirectoryProperty getWorkDir()
+
+    @TaskAction
+    void runDiff() {
+        File projectRoot = projectRootDir.get().asFile
+        File work = workDir.get().asFile
+
+        String defaultVersion = defaultCasVersion.get()
+        String casVersion = prompt("Enter CAS version to compare against", defaultVersion)
+
+        if (!casVersion?.trim()) {
+            casVersion = defaultVersion
+        }
+
+        casVersion = casVersion.trim()
+
+        String resolvedTag = casVersion.startsWith("v") ? casVersion : "v${casVersion}"
+        String url = "https://github.com/apereo/cas/archive/refs/tags/${resolvedTag}.zip"
+
+        File cacheDir = new File(work, "cache")
+        File archiveFile = new File(cacheDir, "apereo-cas-${resolvedTag}.zip")
+
+        File upstreamSrcDir = new File(work, "upstream-src")
+        File overlayOutDir = new File(work, "overlay")
+        File upstreamOutDir = new File(work, "upstream")
+        File diffsOutDir = new File(work, "diffs")
+        File diffHtmlOutDir = new File(work, "diffs-html")
+        File reportsOutDir = new File(work, "reports")
+
+        logHeader("CAS Overlay Diff")
+        logInfo("CAS version", casVersion)
+        logInfo("GitHub tag", resolvedTag)
+        logInfo("Work directory", work.absolutePath)
+
+        deleteRecursively(upstreamSrcDir)
+        deleteRecursively(overlayOutDir)
+        deleteRecursively(upstreamOutDir)
+        deleteRecursively(diffsOutDir)
+        deleteRecursively(diffHtmlOutDir)
+        deleteRecursively(reportsOutDir)
+
+        mkdirs(cacheDir, upstreamSrcDir, overlayOutDir, upstreamOutDir, diffsOutDir, diffHtmlOutDir, reportsOutDir)
+
+        if (archiveFile.exists() && archiveFile.length() > 0) {
+            logSuccess("Using cached archive", archiveFile.absolutePath)
+        } else {
+            logWarn("Archive not found; downloading", url)
+            download(url, archiveFile)
+            logSuccess("Downloaded archive", archiveFile.absolutePath)
+        }
+
+        unzip(archiveFile, upstreamSrcDir)
+
+        File extractedRoot = upstreamSrcDir.listFiles()
+            ?.find { it.directory && it.name.startsWith("cas-") }
+
+        if (!extractedRoot) {
+            throw new GradleException("Unable to locate extracted CAS source root under ${upstreamSrcDir}")
+        }
+
+        logInfo("Upstream source root", extractedRoot.absolutePath)
+
+        List<File> overlayFiles = findOverlayFiles(projectRoot)
+        logInfo("Overlay files found", overlayFiles.size().toString())
+
+        List<File> upstreamFiles = findUpstreamFiles(extractedRoot)
+        logInfo("Upstream candidate files found", upstreamFiles.size().toString())
+
+        List<Map<String, Object>> changed = []
+        List<String> unchanged = []
+        List<String> unmatched = []
+
+        overlayFiles.each { File overlayFile ->
+            String overlayPath = relativize(projectRoot, overlayFile)
+            File upstreamFile = findUpstreamMatch(projectRoot, overlayFile, upstreamFiles)
+
+            if (!upstreamFile) {
+                unmatched << overlayPath
+                return
+            }
+
+            String safeName = "${sha1(overlayPath)}-${overlayFile.name}"
+            File diffFile = new File(diffsOutDir, "${safeName}.diff")
+            File diffHtmlFile = new File(diffHtmlOutDir, "${safeName}.html")
+
+            File overlayCopy = new File(overlayOutDir, overlayPath)
+            File upstreamCopy = new File(upstreamOutDir, overlayPath)
+
+            overlayCopy.parentFile.mkdirs()
+            upstreamCopy.parentFile.mkdirs()
+
+            overlayCopy.bytes = overlayFile.bytes
+            upstreamCopy.bytes = upstreamFile.bytes
+
+            ByteArrayOutputStream stdout = new ByteArrayOutputStream()
+            ByteArrayOutputStream stderr = new ByteArrayOutputStream()
+
+            def result = execOperations.exec {
+                executable = "git"
+                args "diff",
+                    "--no-index",
+                    "--",
+                    upstreamFile.absolutePath,
+                    overlayFile.absolutePath
+
+                standardOutput = stdout
+                errorOutput = stderr
+                ignoreExitValue = true
+            }
+
+            if (result.exitValue > 1) {
+                throw new GradleException(
+                    "git diff failed for ${overlayPath}\n${utf8(stderr)}"
+                )
+            }
+
+            String diffText = utf8(stdout)
+            diffFile.setText(diffText, StandardCharsets.UTF_8.name())
+
+            if (diffText.trim()) {
+                String upstreamPath = relativize(extractedRoot, upstreamFile)
+
+                writeText(diffHtmlFile, renderColorizedDiffHtml(
+                    overlayPath,
+                    upstreamPath,
+                    diffText
+                ))
+
+                changed << [
+                    overlayPath : overlayPath,
+                    upstreamPath: upstreamPath,
+                    diffFile    : diffFile,
+                    diffHtmlFile: diffHtmlFile
+                ]
+            } else {
+                unchanged << overlayPath
+                diffFile.delete()
+                diffHtmlFile.delete()
+            }
+        }
+
+        writeText(new File(reportsOutDir, "changed.txt"),
+            changed.collect { it.overlayPath }.join(System.lineSeparator()))
+
+        writeText(new File(reportsOutDir, "unchanged.txt"),
+            unchanged.join(System.lineSeparator()))
+
+        writeText(new File(reportsOutDir, "unmatched.txt"),
+            unmatched.join(System.lineSeparator()))
+
+        File index = new File(reportsOutDir, "index.html")
+        writeText(index, renderHtmlReport(
+            resolvedTag,
+            changed,
+            unchanged,
+            unmatched,
+            diffsOutDir,
+            diffHtmlOutDir,
+            upstreamOutDir,
+            overlayOutDir
+        ))
+
+        logHeader("Diff Complete")
+        logSuccess("Changed", changed.size())
+        logSuccess("Unchanged", unchanged.size())
+
+        if (unmatched) {
+            logWarn("Unmatched", unmatched.size())
+        } else {
+            logSuccess("Unmatched", 0)
+        }
+
+        logInfo("HTML report", index.absolutePath)
+        logInfo("Colorized diffs", diffHtmlOutDir.absolutePath)
+        logInfo("Raw diffs", diffsOutDir.absolutePath)
+        logInfo("Open report", "open ${index.absolutePath}".toString())
+        logInfo("Open colorized diffs", "open ${diffHtmlOutDir.absolutePath}".toString())
+        logInfo("Open raw diffs in VS Code", "code ${diffsOutDir.absolutePath}".toString())
+        logInfo("IntelliJ directory diff", "idea diff ${upstreamOutDir.absolutePath} ${overlayOutDir.absolutePath}".toString())
+        logInfo("macOS directory diff", "opendiff ${upstreamOutDir.absolutePath} ${overlayOutDir.absolutePath}".toString())
+    }
+
+    private static String prompt(String label, String defaultValue) {
+        String message = "${CYAN}=>${RESET} ${BOLD}${label}${RESET} ${DIM}[default: ${defaultValue}]${RESET}: "
+
+        Console console = System.console()
+        String value
+
+        if (console != null) {
+            value = console.readLine(message)
+        } else {
+            print message
+            System.out.flush()
+            value = new BufferedReader(new InputStreamReader(System.in)).readLine()
+        }
+
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue
+        }
+
+        return value.trim()
+    }
+
+    private static void download(String url, File destination) {
+        destination.parentFile.mkdirs()
+
+        URL source = new URL(url)
+        source.openStream().withCloseable { input ->
+            destination.withOutputStream { output ->
+                output << input
+            }
+        }
+    }
+
+    private static void unzip(File archiveFile, File destinationDir) {
+        destinationDir.mkdirs()
+
+        String canonicalDestination = destinationDir.canonicalPath + File.separator
+
+        new ZipInputStream(new BufferedInputStream(new FileInputStream(archiveFile))).withCloseable { zip ->
+            def entry
+
+            while ((entry = zip.nextEntry) != null) {
+                File target = new File(destinationDir, entry.name)
+
+                if (!target.canonicalPath.startsWith(canonicalDestination)) {
+                    throw new GradleException("Blocked unsafe ZIP entry: ${entry.name}")
+                }
+
+                if (entry.directory) {
+                    target.mkdirs()
+                } else {
+                    target.parentFile.mkdirs()
+                    Files.copy(zip, target.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
+
+                zip.closeEntry()
+            }
+        }
+    }
+
+    private static List<File> findOverlayFiles(File projectRoot) {
+        List<File> roots = [
+            new File(projectRoot, "src/main/java"),
+            new File(projectRoot, "src/main/resources"),
+            new File(projectRoot, "src/main/webapp")
+        ].findAll { it.exists() && it.directory }
+
+        Set<File> results = new LinkedHashSet<>()
+
+        roots.each { File root ->
+            Files.walk(root.toPath()).withCloseable { stream ->
+                stream
+                    .filter { Files.isRegularFile(it) }
+                    .map { it.toFile() }
+                    .filter { File file ->
+                        String path = normalize(relativize(projectRoot, file))
+
+                        boolean supportedResource =
+                            path.endsWith(".html") ||
+                            path.endsWith(".css") ||
+                            path.endsWith(".js") ||
+                            path.endsWith(".properties")
+
+                        boolean supportedCasJava =
+                            path.endsWith(".java") &&
+                            path.contains("/org/apereo/cas/")
+
+                        return supportedResource || supportedCasJava
+                    }
+                    .forEach { results << it }
+            }
+        }
+
+        return results.toList().sort { it.absolutePath }
+    }
+
+    private static List<File> findUpstreamFiles(File upstreamRoot) {
+        List<File> results = []
+
+        Files.walk(upstreamRoot.toPath()).withCloseable { stream ->
+            stream
+                .filter { Files.isRegularFile(it) }
+                .map { it.toFile() }
+                .filter { File file ->
+                    String path = normalize(file.absolutePath)
+
+                    return path.endsWith(".html") ||
+                        path.endsWith(".css") ||
+                        path.endsWith(".js") ||
+                        path.endsWith(".properties") ||
+                        path.endsWith(".java")
+                }
+                .forEach { results << it }
+        }
+
+        return results.sort { it.absolutePath }
+    }
+
+    private static File findUpstreamMatch(File projectRoot, File overlayFile, List<File> upstreamFiles) {
+        String overlayPath = normalize(relativize(projectRoot, overlayFile))
+        String name = overlayFile.name
+        String ext = name.contains(".") ? name.substring(name.lastIndexOf(".")) : ""
+
+        List<File> candidates = upstreamFiles.findAll {
+            it.name == name && normalize(it.absolutePath).endsWith(ext)
+        }
+
+        if (overlayPath.endsWith(".java")) {
+            String javaSuffix = suffixAfter(overlayPath, "org/apereo/cas/")
+
+            if (javaSuffix) {
+                List<File> exactJavaMatches = candidates.findAll {
+                    normalize(it.absolutePath).endsWith("org/apereo/cas/${javaSuffix}")
+                }
+
+                File match = singleOrShortest(exactJavaMatches)
+                if (match) {
+                    return match
+                }
+            }
+        }
+
+        String resourceSuffix = suffixAfter(overlayPath, "src/main/resources/")
+        if (resourceSuffix) {
+            List<File> exactResourceMatches = candidates.findAll {
+                normalize(it.absolutePath).endsWith("src/main/resources/${resourceSuffix}")
+            }
+
+            File match = singleOrShortest(exactResourceMatches)
+            if (match) {
+                return match
+            }
+
+            List<File> relaxedResourceMatches = candidates.findAll {
+                normalize(it.absolutePath).endsWith(resourceSuffix)
+            }
+
+            match = singleOrShortest(relaxedResourceMatches)
+            if (match) {
+                return match
+            }
+        }
+
+        String webappSuffix = suffixAfter(overlayPath, "src/main/webapp/")
+        if (webappSuffix) {
+            List<File> exactWebappMatches = candidates.findAll {
+                String p = normalize(it.absolutePath)
+                p.endsWith("src/main/webapp/${webappSuffix}") || p.endsWith(webappSuffix)
+            }
+
+            File match = singleOrShortest(exactWebappMatches)
+            if (match) {
+                return match
+            }
+        }
+
+        if (candidates.size() == 1) {
+            return candidates[0]
+        }
+
+        return null
+    }
+
+    private static File singleOrShortest(List<File> files) {
+        if (!files) {
+            return null
+        }
+
+        if (files.size() == 1) {
+            return files[0]
+        }
+
+        return files.sort { normalize(it.absolutePath).length() }[0]
+    }
+
+    private static String suffixAfter(String text, String marker) {
+        int idx = text.indexOf(marker)
+        return idx >= 0 ? text.substring(idx) : null
+    }
+
+    private static String relativize(File root, File file) {
+        return normalize(root.toPath().relativize(file.toPath()).toString())
+    }
+
+    private static String normalize(String path) {
+        return path.replace(File.separator, "/")
+    }
+
+    private static String sha1(String input) {
+        return MessageDigest.getInstance("SHA-1")
+            .digest(input.getBytes(StandardCharsets.UTF_8))
+            .encodeHex()
+            .toString()
+    }
+
+    private static void writeText(File file, String text) {
+        file.parentFile.mkdirs()
+        file.setText(text ?: "", StandardCharsets.UTF_8.name())
+    }
+
+    private static void mkdirs(File... dirs) {
+        dirs.each { it.mkdirs() }
+    }
+
+    private static void deleteRecursively(File file) {
+        if (!file.exists()) {
+            return
+        }
+
+        if (file.directory) {
+            file.listFiles()?.each { deleteRecursively(it) }
+        }
+
+        if (!file.delete()) {
+            throw new GradleException("Unable to delete ${file}")
+        }
+    }
+
+    private static String renderHtmlReport(
+        String resolvedTag,
+        List<Map<String, Object>> changed,
+        List<String> unchanged,
+        List<String> unmatched,
+        File diffsOutDir,
+        File diffHtmlOutDir,
+        File upstreamOutDir,
+        File overlayOutDir
+    ) {
+        String changedRows = changed.collect { item ->
+            File diffFile = item.diffFile as File
+            File diffHtmlFile = item.diffHtmlFile as File
+            String overlayPath = item.overlayPath as String
+
+            File upstreamComparableFile = new File(upstreamOutDir, overlayPath)
+            File overlayComparableFile = new File(overlayOutDir, overlayPath)
+
+            String relativeDiff = normalize(diffsOutDir.toPath().relativize(diffFile.toPath()).toString())
+            String diffHref = "../diffs/${escapeHtml(relativeDiff)}"
+
+            String relativeHtmlDiff = normalize(diffHtmlOutDir.toPath().relativize(diffHtmlFile.toPath()).toString())
+            String diffHtmlHref = "../diffs-html/${escapeHtml(relativeHtmlDiff)}"
+
+            String vscodeCommand = "code --diff \"${upstreamComparableFile.absolutePath}\" \"${overlayComparableFile.absolutePath}\""
+            String ideaCommand = "idea diff \"${upstreamComparableFile.absolutePath}\" \"${overlayComparableFile.absolutePath}\""
+
+            """
+            <tr>
+              <td><span class="status status-changed">Changed</span></td>
+              <td><code>${escapeHtml(overlayPath)}</code></td>
+              <td><code>${escapeHtml(item.upstreamPath as String)}</code></td>
+              <td>
+                <div class="button-row">
+                  <a class="button" href="${diffHtmlHref}">Open color diff</a>
+                  <a class="button button-secondary" href="${diffHref}">Raw .diff</a>
+                </div>
+              </td>
+              <td>
+                <details>
+                  <summary>Commands</summary>
+                  <div class="command-stack">
+                    <div>
+                      <span>VS Code</span>
+                      <code>${escapeHtml(vscodeCommand)}</code>
+                    </div>
+                    <div>
+                      <span>IntelliJ</span>
+                      <code>${escapeHtml(ideaCommand)}</code>
+                    </div>
+                  </div>
+                </details>
+              </td>
+            </tr>
+            """
+        }.join(System.lineSeparator())
+
+        if (!changedRows.trim()) {
+            changedRows = """
+            <tr>
+              <td colspan="5" class="empty">No changed files were found.</td>
+            </tr>
+            """
+        }
+
+        String unmatchedRows = unmatched.collect { path ->
+            """
+            <tr>
+              <td><span class="status status-unmatched">Unmatched</span></td>
+              <td colspan="4"><code>${escapeHtml(path)}</code></td>
+            </tr>
+            """
+        }.join(System.lineSeparator())
+
+        if (!unmatchedRows.trim()) {
+            unmatchedRows = """
+            <tr>
+              <td colspan="5" class="empty">Every overlay file was matched to an upstream candidate.</td>
+            </tr>
+            """
+        }
+
+        String vscodeOpenDiffsCommand = "code \"${diffsOutDir.absolutePath}\""
+        String vscodeOpenColorDiffsCommand = "open \"${diffHtmlOutDir.absolutePath}\""
+        String ideaDirectoryDiffCommand = "idea diff \"${upstreamOutDir.absolutePath}\" \"${overlayOutDir.absolutePath}\""
+        String opendiffCommand = "opendiff \"${upstreamOutDir.absolutePath}\" \"${overlayOutDir.absolutePath}\""
+        String meldCommand = "meld \"${upstreamOutDir.absolutePath}\" \"${overlayOutDir.absolutePath}\""
+
+        return """
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>CAS Overlay Diff Report</title>
+          <style>
+            :root {
+              --bg: #0f172a;
+              --panel: #111827;
+              --panel-2: #1f2937;
+              --text: #e5e7eb;
+              --muted: #9ca3af;
+              --border: rgba(148, 163, 184, 0.25);
+              --blue: #38bdf8;
+              --green: #34d399;
+              --yellow: #fbbf24;
+              --red: #fb7185;
+              --purple: #c084fc;
+              --shadow: rgba(0, 0, 0, 0.35);
+            }
+
+            * {
+              box-sizing: border-box;
+            }
+
+            body {
+              margin: 0;
+              font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+              background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 32rem),
+                radial-gradient(circle at top right, rgba(192, 132, 252, 0.14), transparent 28rem),
+                var(--bg);
+              color: var(--text);
+              line-height: 1.5;
+            }
+
+            .page {
+              width: min(1280px, calc(100% - 32px));
+              margin: 0 auto;
+              padding: 48px 0;
+            }
+
+            .hero {
+              border: 1px solid var(--border);
+              background: linear-gradient(135deg, rgba(17, 24, 39, 0.94), rgba(31, 41, 55, 0.88));
+              border-radius: 28px;
+              padding: 32px;
+              box-shadow: 0 24px 80px var(--shadow);
+            }
+
+            .eyebrow {
+              color: var(--blue);
+              font-weight: 800;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              font-size: 0.78rem;
+            }
+
+            h1 {
+              margin: 10px 0 8px;
+              font-size: clamp(2rem, 5vw, 4rem);
+              line-height: 1;
+            }
+
+            .subtitle {
+              color: var(--muted);
+              font-size: 1.05rem;
+              max-width: 900px;
+            }
+
+            .cards {
+              display: grid;
+              grid-template-columns: repeat(4, minmax(0, 1fr));
+              gap: 16px;
+              margin-top: 24px;
+            }
+
+            .card {
+              background: rgba(15, 23, 42, 0.72);
+              border: 1px solid var(--border);
+              border-radius: 20px;
+              padding: 18px;
+            }
+
+            .card .label {
+              color: var(--muted);
+              font-size: 0.82rem;
+            }
+
+            .card .value {
+              margin-top: 8px;
+              font-size: 2rem;
+              font-weight: 900;
+            }
+
+            .value.changed {
+              color: var(--yellow);
+            }
+
+            .value.unchanged {
+              color: var(--green);
+            }
+
+            .value.unmatched {
+              color: var(--red);
+            }
+
+            .value.tag {
+              color: var(--blue);
+              font-size: 1.35rem;
+            }
+
+            .section {
+              margin-top: 26px;
+              background: rgba(17, 24, 39, 0.82);
+              border: 1px solid var(--border);
+              border-radius: 24px;
+              overflow: hidden;
+              box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+            }
+
+            .section-header {
+              padding: 20px 24px;
+              border-bottom: 1px solid var(--border);
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 16px;
+            }
+
+            .section-header h2 {
+              margin: 0;
+              font-size: 1.1rem;
+            }
+
+            .note {
+              color: var(--muted);
+              padding: 0 24px 20px;
+              margin-top: -8px;
+            }
+
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+
+            th, td {
+              text-align: left;
+              padding: 14px 16px;
+              border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+              vertical-align: top;
+            }
+
+            th {
+              color: var(--muted);
+              font-size: 0.78rem;
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+              background: rgba(15, 23, 42, 0.5);
+            }
+
+            tr:hover td {
+              background: rgba(56, 189, 248, 0.06);
+            }
+
+            code {
+              color: #dbeafe;
+              background: rgba(15, 23, 42, 0.92);
+              border: 1px solid rgba(148, 163, 184, 0.22);
+              border-radius: 10px;
+              padding: 0.18rem 0.42rem;
+              font-size: 0.86rem;
+              white-space: pre-wrap;
+              word-break: break-word;
+            }
+
+            .status {
+              display: inline-flex;
+              align-items: center;
+              border-radius: 999px;
+              padding: 0.24rem 0.62rem;
+              font-size: 0.78rem;
+              font-weight: 900;
+            }
+
+            .status-changed {
+              color: #422006;
+              background: var(--yellow);
+            }
+
+            .status-unmatched {
+              color: #450a0a;
+              background: var(--red);
+            }
+
+            .button-row {
+              display: flex;
+              gap: 8px;
+              flex-wrap: wrap;
+            }
+
+            .button {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              text-decoration: none;
+              color: #082f49;
+              background: var(--blue);
+              border-radius: 999px;
+              padding: 0.42rem 0.78rem;
+              font-weight: 900;
+              font-size: 0.86rem;
+              white-space: nowrap;
+            }
+
+            .button-secondary {
+              color: #dbeafe;
+              background: rgba(15, 23, 42, 0.92);
+              border: 1px solid rgba(148, 163, 184, 0.35);
+            }
+
+            .button:hover {
+              filter: brightness(1.08);
+            }
+
+            details {
+              color: var(--muted);
+            }
+
+            summary {
+              cursor: pointer;
+              color: var(--blue);
+              font-weight: 800;
+            }
+
+            .command-stack {
+              display: grid;
+              gap: 10px;
+              margin-top: 10px;
+            }
+
+            .command-stack span {
+              display: block;
+              color: var(--muted);
+              font-size: 0.8rem;
+              margin-bottom: 4px;
+              font-weight: 800;
+            }
+
+            .empty {
+              color: var(--muted);
+              text-align: center;
+              padding: 28px;
+            }
+
+            .commands {
+              display: grid;
+              gap: 14px;
+              padding: 20px 24px 24px;
+            }
+
+            .command {
+              display: grid;
+              gap: 6px;
+            }
+
+            .command strong {
+              color: var(--text);
+            }
+
+            .command p {
+              margin: 0;
+              color: var(--muted);
+            }
+
+            .footer {
+              color: var(--muted);
+              margin-top: 22px;
+              text-align: center;
+              font-size: 0.9rem;
+            }
+
+            @media (max-width: 980px) {
+              .cards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+              }
+
+              table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+              }
+
+              code {
+                white-space: pre-wrap;
+              }
+            }
+
+            @media (max-width: 560px) {
+              .cards {
+                grid-template-columns: 1fr;
+              }
+
+              .hero {
+                padding: 24px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <main class="page">
+            <section class="hero">
+              <div class="eyebrow">Apereo CAS Overlay</div>
+              <h1>Diff Report</h1>
+              <p class="subtitle">
+                Compared local overlay files against the Apereo CAS source archive for
+                <code>${escapeHtml(resolvedTag)}</code>. Open individual colorized diffs,
+                raw unified diff files, or copy a per-file editor command.
+              </p>
+
+              <div class="cards">
+                <div class="card">
+                  <div class="label">CAS tag</div>
+                  <div class="value tag">${escapeHtml(resolvedTag)}</div>
+                </div>
+                <div class="card">
+                  <div class="label">Changed files</div>
+                  <div class="value changed">${changed.size()}</div>
+                </div>
+                <div class="card">
+                  <div class="label">Unchanged files</div>
+                  <div class="value unchanged">${unchanged.size()}</div>
+                </div>
+                <div class="card">
+                  <div class="label">Unmatched files</div>
+                  <div class="value unmatched">${unmatched.size()}</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section">
+              <div class="section-header">
+                <h2>Changed Files</h2>
+                <span class="status status-changed">${changed.size()} changed</span>
+              </div>
+              <p class="note">
+                Open the colorized browser diff, the raw <code>.diff</code>, or use the editor commands.
+              </p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Overlay file</th>
+                    <th>Upstream match</th>
+                    <th>Diff</th>
+                    <th>Editor commands</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${changedRows}
+                </tbody>
+              </table>
+            </section>
+
+            <section class="section">
+              <div class="section-header">
+                <h2>Unmatched Files</h2>
+                <span class="status status-unmatched">${unmatched.size()} unmatched</span>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th colspan="4">Overlay file</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${unmatchedRows}
+                </tbody>
+              </table>
+            </section>
+
+            <section class="section">
+              <div class="section-header">
+                <h2>Open in Diff Tools</h2>
+              </div>
+              <div class="commands">
+                <div class="command">
+                  <strong>Browser: open colorized diffs folder</strong>
+                  <code>${escapeHtml(vscodeOpenColorDiffsCommand)}</code>
+                </div>
+
+                <div class="command">
+                  <strong>VS Code: open generated raw unified diffs</strong>
+                  <code>${escapeHtml(vscodeOpenDiffsCommand)}</code>
+                </div>
+
+                <div class="command">
+                  <strong>IntelliJ IDEA: directory diff</strong>
+                  <code>${escapeHtml(ideaDirectoryDiffCommand)}</code>
+                </div>
+
+                <div class="command">
+                  <strong>macOS FileMerge / opendiff: directory diff</strong>
+                  <code>${escapeHtml(opendiffCommand)}</code>
+                </div>
+
+                <div class="command">
+                  <strong>Meld: directory diff</strong>
+                  <code>${escapeHtml(meldCommand)}</code>
+                </div>
+              </div>
+            </section>
+
+            <div class="footer">
+              Generated by the Gradle <code>diff</code> task.
+            </div>
+          </main>
+        </body>
+        </html>
+        """.stripIndent()
+    }
+
+    private static String renderColorizedDiffHtml(String overlayPath, String upstreamPath, String diffText) {
+        String rows = diffText.readLines().collect { line ->
+            String cssClass = diffLineClass(line)
+            String escaped = escapeHtml(line)
+
+            """
+            <div class="line ${cssClass}">
+              <span class="gutter">${escapeHtml(diffLinePrefix(line))}</span>
+              <code>${escaped}</code>
+            </div>
+            """
+        }.join(System.lineSeparator())
+
+        return """
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Diff: ${escapeHtml(overlayPath)}</title>
+          <style>
+            :root {
+              --bg: #0f172a;
+              --panel: #111827;
+              --text: #e5e7eb;
+              --muted: #94a3b8;
+              --border: rgba(148, 163, 184, 0.24);
+              --add-bg: rgba(34, 197, 94, 0.16);
+              --add-border: rgba(34, 197, 94, 0.38);
+              --add-text: #bbf7d0;
+              --del-bg: rgba(244, 63, 94, 0.16);
+              --del-border: rgba(244, 63, 94, 0.38);
+              --del-text: #fecdd3;
+              --hunk-bg: rgba(56, 189, 248, 0.16);
+              --hunk-border: rgba(56, 189, 248, 0.38);
+              --hunk-text: #bae6fd;
+              --meta-bg: rgba(168, 85, 247, 0.14);
+              --meta-border: rgba(168, 85, 247, 0.35);
+              --meta-text: #e9d5ff;
+            }
+
+            * {
+              box-sizing: border-box;
+            }
+
+            body {
+              margin: 0;
+              color: var(--text);
+              background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 30rem),
+                radial-gradient(circle at top right, rgba(168, 85, 247, 0.12), transparent 28rem),
+                var(--bg);
+              font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            }
+
+            .page {
+              width: min(1400px, calc(100% - 32px));
+              margin: 0 auto;
+              padding: 36px 0;
+            }
+
+            .header {
+              border: 1px solid var(--border);
+              background: rgba(17, 24, 39, 0.88);
+              border-radius: 24px;
+              padding: 24px;
+              margin-bottom: 18px;
+              box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+            }
+
+            .eyebrow {
+              color: #38bdf8;
+              font-weight: 900;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              font-size: 0.78rem;
+            }
+
+            h1 {
+              margin: 8px 0 12px;
+              font-size: clamp(1.5rem, 4vw, 3rem);
+              line-height: 1.05;
+              word-break: break-word;
+            }
+
+            .paths {
+              display: grid;
+              gap: 8px;
+              color: var(--muted);
+            }
+
+            .paths code {
+              color: #dbeafe;
+              background: rgba(15, 23, 42, 0.9);
+              border: 1px solid var(--border);
+              border-radius: 10px;
+              padding: 0.18rem 0.42rem;
+              word-break: break-word;
+            }
+
+            .diff {
+              border: 1px solid var(--border);
+              background: rgba(17, 24, 39, 0.9);
+              border-radius: 24px;
+              overflow: hidden;
+              box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+            }
+
+            .toolbar {
+              position: sticky;
+              top: 0;
+              z-index: 2;
+              display: flex;
+              justify-content: space-between;
+              gap: 12px;
+              align-items: center;
+              padding: 14px 18px;
+              background: rgba(15, 23, 42, 0.96);
+              border-bottom: 1px solid var(--border);
+              backdrop-filter: blur(10px);
+            }
+
+            .legend {
+              display: flex;
+              gap: 10px;
+              flex-wrap: wrap;
+              color: var(--muted);
+              font-size: 0.86rem;
+            }
+
+            .pill {
+              border-radius: 999px;
+              padding: 0.18rem 0.52rem;
+              font-weight: 800;
+            }
+
+            .pill-add {
+              color: #052e16;
+              background: #86efac;
+            }
+
+            .pill-del {
+              color: #450a0a;
+              background: #fda4af;
+            }
+
+            .pill-hunk {
+              color: #082f49;
+              background: #7dd3fc;
+            }
+
+            .content {
+              overflow-x: auto;
+              font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+              font-size: 13px;
+              line-height: 1.55;
+            }
+
+            .line {
+              display: grid;
+              grid-template-columns: 48px minmax(max-content, 1fr);
+              border-left: 4px solid transparent;
+              min-width: fit-content;
+            }
+
+            .line:hover {
+              filter: brightness(1.08);
+            }
+
+            .gutter {
+              user-select: none;
+              color: var(--muted);
+              text-align: center;
+              padding: 0 10px;
+              border-right: 1px solid rgba(148, 163, 184, 0.16);
+              background: rgba(15, 23, 42, 0.55);
+            }
+
+            .line code {
+              white-space: pre;
+              padding: 0 14px;
+              color: var(--text);
+              background: transparent;
+              border: 0;
+            }
+
+            .line-add {
+              background: var(--add-bg);
+              border-left-color: var(--add-border);
+            }
+
+            .line-add code {
+              color: var(--add-text);
+            }
+
+            .line-delete {
+              background: var(--del-bg);
+              border-left-color: var(--del-border);
+            }
+
+            .line-delete code {
+              color: var(--del-text);
+            }
+
+            .line-hunk {
+              background: var(--hunk-bg);
+              border-left-color: var(--hunk-border);
+            }
+
+            .line-hunk code {
+              color: var(--hunk-text);
+              font-weight: 800;
+            }
+
+            .line-meta {
+              background: var(--meta-bg);
+              border-left-color: var(--meta-border);
+            }
+
+            .line-meta code {
+              color: var(--meta-text);
+              font-weight: 700;
+            }
+
+            .line-context code {
+              color: #cbd5e1;
+            }
+
+            .empty {
+              color: var(--muted);
+              padding: 24px;
+            }
+          </style>
+        </head>
+        <body>
+          <main class="page">
+            <section class="header">
+              <div class="eyebrow">Colorized Unified Diff</div>
+              <h1>${escapeHtml(overlayPath)}</h1>
+              <div class="paths">
+                <div>Upstream: <code>${escapeHtml(upstreamPath)}</code></div>
+                <div>Overlay: <code>${escapeHtml(overlayPath)}</code></div>
+              </div>
+            </section>
+
+            <section class="diff">
+              <div class="toolbar">
+                <strong>Diff</strong>
+                <div class="legend">
+                  <span class="pill pill-add">Added</span>
+                  <span class="pill pill-del">Removed</span>
+                  <span class="pill pill-hunk">Hunk</span>
+                </div>
+              </div>
+              <div class="content">
+                ${rows ?: '<div class="empty">No diff content.</div>'}
+              </div>
+            </section>
+          </main>
+        </body>
+        </html>
+        """.stripIndent()
+    }
+
+    private static String diffLineClass(String line) {
+        if (line.startsWith("@@")) {
+            return "line-hunk"
+        }
+
+        if (line.startsWith("diff ") ||
+            line.startsWith("index ") ||
+            line.startsWith("--- ") ||
+            line.startsWith("+++ ")) {
+            return "line-meta"
+        }
+
+        if (line.startsWith("+")) {
+            return "line-add"
+        }
+
+        if (line.startsWith("-")) {
+            return "line-delete"
+        }
+
+        return "line-context"
+    }
+
+    private static String diffLinePrefix(String line) {
+        if (line.startsWith("@@")) {
+            return "@@"
+        }
+
+        if (line.startsWith("+")) {
+            return "+"
+        }
+
+        if (line.startsWith("-")) {
+            return "-"
+        }
+
+        if (line.startsWith("diff ") ||
+            line.startsWith("index ") ||
+            line.startsWith("--- ") ||
+            line.startsWith("+++ ")) {
+            return "i"
+        }
+
+        return ""
+    }
+
+    private static String escapeHtml(String input) {
+        if (input == null) {
+            return ""
+        }
+
+        return input
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;")
+    }
+
+    private void logHeader(Object message) {
+        logger.lifecycle("")
+        logger.lifecycle("${MAGENTA}${BOLD}== ${String.valueOf(message)} ==${RESET}".toString())
+    }
+
+    private void logInfo(Object label, Object value) {
+        logger.lifecycle("${BLUE}${BOLD}INFO${RESET} ${String.valueOf(label)}: ${CYAN}${String.valueOf(value)}${RESET}".toString())
+    }
+
+    private void logSuccess(Object label, Object value) {
+        logger.lifecycle("${GREEN}${BOLD}OK${RESET} ${String.valueOf(label)}: ${GREEN}${String.valueOf(value)}${RESET}".toString())
+    }
+
+    private void logWarn(Object label, Object value) {
+        logger.lifecycle("${YELLOW}${BOLD}WARN${RESET} ${String.valueOf(label)}: ${YELLOW}${String.valueOf(value)}${RESET}".toString())
+    }
+
+    private static String utf8(ByteArrayOutputStream output) {
+      return new String(output.toByteArray(), StandardCharsets.UTF_8)
+    }
+}
+
+tasks.register("diff", CasOverlayDiffTask) {
+    group = "CAS"
+    description = "Compare overlay source/resources with matching files from the Apereo CAS GitHub tag."
+
+    projectRootDir.convention(layout.projectDirectory)
+    workDir.convention(layout.buildDirectory.dir("cas-diff"))
+
+    defaultCasVersion.convention(
+        providers.gradleProperty("cas.version").orElse("7.3.7")
+    )
+}
