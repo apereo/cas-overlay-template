@@ -1,0 +1,287 @@
+import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.UntrackedTask
+
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.util.zip.ZipInputStream
+
+@UntrackedTask(because = "Downloads and extracts upstream CAS source, prompts when multiple candidates are found, then copies a requested Java class into the overlay.")
+abstract class GetJavaClassTask extends DefaultTask {
+    private static final String RESET = "\u001B[0m"
+    private static final String BOLD = "\u001B[1m"
+    private static final String DIM = "\u001B[2m"
+    private static final String GREEN = "\u001B[32m"
+    private static final String YELLOW = "\u001B[33m"
+    private static final String BLUE = "\u001B[34m"
+    private static final String MAGENTA = "\u001B[35m"
+    private static final String CYAN = "\u001B[36m"
+
+    @Input
+    abstract Property<String> getClassName()
+
+    @Input
+    abstract Property<String> getCasVersion()
+
+    @Internal
+    abstract DirectoryProperty getProjectRootDir()
+
+    @OutputDirectory
+    abstract DirectoryProperty getWorkDir()
+
+    @TaskAction
+    void copyJavaClass() {
+        File projectRoot = projectRootDir.get().asFile
+        File work = workDir.get().asFile
+
+        String requestedClassName = className.get().trim()
+
+        if (!requestedClassName.matches(/[a-zA-Z_$][a-zA-Z\d_$]*/)) {
+            throw new GradleException("Invalid className '${requestedClassName}'. Use a simple Java class name such as PrincipalFactory")
+        }
+
+        String version = casVersion.get().trim()
+        String resolvedTag = version.startsWith("v") ? version : "v${version}"
+        String url = "https://github.com/apereo/cas/archive/refs/tags/${resolvedTag}.zip"
+
+        File cacheDir = new File(work, "cache")
+        File archiveFile = new File(cacheDir, "apereo-cas-${resolvedTag}.zip")
+        File upstreamSrcDir = new File(work, "upstream-src")
+
+        logHeader("Get CAS Java Class")
+        logInfo("CAS version", version)
+        logInfo("GitHub tag", resolvedTag)
+        logInfo("Class name", requestedClassName)
+        logInfo("Work directory", work.absolutePath)
+
+        deleteRecursively(upstreamSrcDir)
+        mkdirs(cacheDir, upstreamSrcDir)
+
+        if (archiveFile.exists() && archiveFile.length() > 0) {
+            logSuccess("Using cached archive", archiveFile.absolutePath)
+        } else {
+            logWarn("Archive not found; downloading", url)
+            download(url, archiveFile)
+            logSuccess("Downloaded archive", archiveFile.absolutePath)
+        }
+
+        unzip(archiveFile, upstreamSrcDir)
+
+        File extractedRoot = upstreamSrcDir.listFiles()
+            ?.find { it.directory && it.name.startsWith("cas-") }
+
+        if (!extractedRoot) {
+            throw new GradleException("Unable to locate extracted CAS source root under ${upstreamSrcDir}")
+        }
+
+        logInfo("Upstream source root", extractedRoot.absolutePath)
+
+        List<File> matches = []
+
+        Files.walk(extractedRoot.toPath()).withCloseable { stream ->
+            stream
+                .filter { Files.isRegularFile(it) }
+                .map { it.toFile() }
+                .filter { it.name == "${requestedClassName}.java" }
+                .filter { normalize(it.absolutePath).contains("/src/main/java/") }
+                .forEach { matches << it }
+        }
+
+        if (!matches) {
+            throw new GradleException("Unable to find Java class '${requestedClassName}' in Apereo CAS ${resolvedTag}")
+        }
+
+        logInfo("Candidates found", matches.size())
+
+        File upstreamFile = matches.size() == 1
+            ? matches[0]
+            : promptForCandidate(requestedClassName, extractedRoot, matches)
+
+        String packageName = readPackageName(upstreamFile)
+
+        if (!packageName) {
+            throw new GradleException("Unable to determine package name from ${upstreamFile}")
+        }
+
+        File destinationDir = new File(projectRoot, "src/main/java/${packageName.replace('.', '/')}")
+        File destinationFile = new File(destinationDir, "${requestedClassName}.java")
+
+        destinationDir.mkdirs()
+
+        if (destinationFile.exists()) {
+            logWarn("Destination file already exists. Removing...", destinationFile)
+            destinationFile.delete()
+        }
+
+        destinationFile.bytes = upstreamFile.bytes
+
+        logHeader("Class Copied")
+        logSuccess("Class", "${packageName}.${requestedClassName}")
+        logSuccess("From", upstreamFile.absolutePath)
+        logSuccess("To", destinationFile.absolutePath)
+    }
+
+    private File promptForCandidate(String requestedClassName, File extractedRoot, List<File> matches) {
+        List<File> sortedMatches = matches.sort {
+            normalize(extractedRoot.toPath().relativize(it.toPath()).toString())
+        }
+
+        logger.lifecycle("")
+        logger.lifecycle("${MAGENTA}${BOLD}Found multiple matches for '${requestedClassName}'${RESET}".toString())
+        logger.lifecycle("")
+
+        sortedMatches.eachWithIndex { File file, int index ->
+            String relativePath = normalize(extractedRoot.toPath().relativize(file.toPath()).toString())
+            String packageName = readPackageName(file) ?: "unknown package"
+
+            logger.lifecycle("${CYAN}${index + 1})${RESET} ${BOLD}${relativePath}${RESET}".toString())
+            logger.lifecycle("   ${DIM}package ${packageName}${RESET}".toString())
+        }
+
+        logger.lifecycle("")
+
+        while (true) {
+            String answer = prompt("Select class to copy [1-${sortedMatches.size()}]", "1")
+
+            if (answer?.isInteger()) {
+                int selected = answer.toInteger()
+
+                if (selected >= 1 && selected <= sortedMatches.size()) {
+                    File selectedFile = sortedMatches[selected - 1]
+                    String selectedPath = normalize(extractedRoot.toPath().relativize(selectedFile.toPath()).toString())
+
+                    logSuccess("Selected", selectedPath)
+                    return selectedFile
+                }
+            }
+
+            logWarn("Invalid selection", "Enter a number from 1 to ${sortedMatches.size()}")
+        }
+    }
+
+    private static String prompt(String label, String defaultValue) {
+        String message = "${CYAN}=>${RESET} ${BOLD}${label}${RESET} ${DIM}[default: ${defaultValue}]${RESET}: "
+
+        Console console = System.console()
+        String value
+
+        if (console != null) {
+            value = console.readLine(message)
+        } else {
+            print message
+            System.out.flush()
+            value = new BufferedReader(new InputStreamReader(System.in)).readLine()
+        }
+
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue
+        }
+
+        return value.trim()
+    }
+
+    private static String readPackageName(File javaFile) {
+        String text = javaFile.getText(StandardCharsets.UTF_8.name())
+        def matcher = text =~ /(?m)^\s*package\s+([a-zA-Z_$][a-zA-Z\d_$]*(?:\.[a-zA-Z_$][a-zA-Z\d_$]*)*)\s*;/
+        return matcher.find() ? matcher.group(1) : null
+    }
+
+    private static void download(String url, File destination) {
+        destination.parentFile.mkdirs()
+
+        new URL(url).openStream().withCloseable { input ->
+            destination.withOutputStream { output ->
+                output << input
+            }
+        }
+    }
+
+    private static void unzip(File archiveFile, File destinationDir) {
+        destinationDir.mkdirs()
+
+        String canonicalDestination = destinationDir.canonicalPath + File.separator
+
+        new ZipInputStream(new BufferedInputStream(new FileInputStream(archiveFile))).withCloseable { zip ->
+            def entry
+
+            while ((entry = zip.nextEntry) != null) {
+                File target = new File(destinationDir, entry.name)
+
+                if (!target.canonicalPath.startsWith(canonicalDestination)) {
+                    throw new GradleException("Blocked unsafe ZIP entry: ${entry.name}")
+                }
+
+                if (entry.directory) {
+                    target.mkdirs()
+                } else {
+                    target.parentFile.mkdirs()
+                    Files.copy(zip, target.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
+
+                zip.closeEntry()
+            }
+        }
+    }
+
+    private static void mkdirs(File... dirs) {
+        dirs.each { it.mkdirs() }
+    }
+
+    private static void deleteRecursively(File file) {
+        if (!file.exists()) {
+            return
+        }
+
+        if (file.directory) {
+            file.listFiles()?.each { deleteRecursively(it) }
+        }
+
+        if (!file.delete()) {
+            throw new GradleException("Unable to delete ${file}")
+        }
+    }
+
+    private static String normalize(String path) {
+        return path.replace(File.separator, "/")
+    }
+
+    private void logHeader(Object message) {
+        logger.lifecycle("")
+        logger.lifecycle("${MAGENTA}${BOLD}== ${String.valueOf(message)} ==${RESET}".toString())
+    }
+
+    private void logInfo(Object label, Object value) {
+        logger.lifecycle("${BLUE}${BOLD}INFO${RESET} ${String.valueOf(label)}: ${CYAN}${String.valueOf(value)}${RESET}".toString())
+    }
+
+    private void logSuccess(Object label, Object value) {
+        logger.lifecycle("${GREEN}${BOLD}OK${RESET} ${String.valueOf(label)}: ${GREEN}${String.valueOf(value)}${RESET}".toString())
+    }
+
+    private void logWarn(Object label, Object value) {
+        logger.lifecycle("${YELLOW}${BOLD}WARN${RESET} ${String.valueOf(label)}: ${YELLOW}${String.valueOf(value)}${RESET}".toString())
+    }
+}
+
+tasks.register("getJavaClass", GetJavaClassTask) {
+    group = "CAS"
+    description = "Copy a Java class from upstream Apereo CAS into src/main/java. Usage: ./gradlew getJavaClass -PclassName=..."
+
+    projectRootDir.convention(layout.projectDirectory)
+    workDir.convention(layout.buildDirectory.dir("cas-class"))
+
+    className.convention(
+        providers.gradleProperty("className")
+    )
+
+    casVersion.convention(
+        providers.gradleProperty("cas.version")
+    )
+}
