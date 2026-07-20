@@ -121,7 +121,6 @@ Set -Dlog4j2.contextSelector=org.apache.logging.log4j.core.selector.BasicContext
         <Logger name="org.springframework.webflow" level="${sys:spring.webflow.log.level}"/>
         <Logger name="org.springframework.aop" level="warn" />
         <Logger name="org.springframework.session" level="warn"/>
-        <Logger name="org.springframework.scheduling" level="info"/>
         <Logger name="org.springframework.cloud.vault" level="warn" />
         <Logger name="org.springframework.web.client" level="warn" />
         <Logger name="org.springframework.security" level="${sys:spring.security.log.level}"/>
