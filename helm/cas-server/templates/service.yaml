@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cas-server.fullname" . }}
+  labels:
+    {{- include "cas-server.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.cas.service.type }}
+  publishNotReadyAddresses: {{ .Values.cas.service.publishNotReadyAddresses }}
+  ports:
+    - port: {{ .Values.cas.service.port }}
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    {{- include "cas-server.selectorLabels" . | nindent 4 }}
